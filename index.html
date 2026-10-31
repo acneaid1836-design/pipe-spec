@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='12' fill='%231e3a5f'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'>P</text></svg>">
+<title>工程配管規格百科 | Pipe & Material Spec DB</title>
+<style>
+:root{
+  --bg:#f5f5f5;
+  --fg:#1a1a1a;
+  --muted:#777;
+  --border:#e5e5e5;
+  --accent:#1e3a5f;
+  --accent-dark:#152a46;
+  --accent-light:#eef2f7;
+  --warn:#c0392b;
+  --card:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei","PingFang TC",sans-serif;
+  background:var(--bg);color:var(--fg);font-size:14px;line-height:1.5;
+}
+header{
+  background:var(--accent);color:#fff;padding:12px 20px;
+  display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;
+}
+header h1{font-size:17px;font-weight:700;white-space:nowrap;letter-spacing:.5px}
+header .search-wrap{flex:1;max-width:680px;margin:0 auto;display:flex}
+header .search-wrap input{
+  flex:1;padding:9px 14px;font-size:14px;border:none;outline:none;
+  border-radius:3px 0 0 3px;
+}
+header .search-wrap button{
+  background:#fff;color:var(--accent);border:none;padding:0 20px;
+  border-radius:0 3px 3px 0;cursor:pointer;font-size:14px;font-weight:600;
+}
+header .lang{margin-left:auto}
+header .lang select{
+  background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.35);
+  padding:6px 10px;border-radius:3px;font-size:12px;cursor:pointer;
+}
+header .lang select option{color:#000}
+.container{display:flex;min-height:calc(100vh - 56px);max-width:1400px;margin:0 auto}
+nav{
+  width:220px;background:#fff;border-right:1px solid var(--border);
+  padding:12px 0;flex-shrink:0;overflow-y:auto;
+}
+nav .cat-title{
+  padding:8px 16px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;
+}
+nav .cat-group{margin-bottom:2px}
+nav .cat-toggle{
+  display:flex;align-items:center;gap:6px;width:100%;text-align:left;
+  padding:9px 16px;background:none;border:none;cursor:pointer;
+  color:var(--fg);font-size:13px;font-family:inherit;font-weight:600;
+}
+nav .cat-toggle:hover{background:var(--accent-light);color:var(--accent)}
+nav .cat-toggle .arrow{font-size:10px;transition:transform .15s;width:12px;display:inline-block}
+nav .cat-group.open .cat-toggle .arrow{transform:rotate(90deg)}
+nav .cat-children{padding-left:0;overflow:hidden}
+nav .cat-item{
+  display:block;width:100%;text-align:left;padding:7px 16px 7px 32px;
+  background:none;border:none;border-left:3px solid transparent;
+  color:#444;font-size:12.5px;cursor:pointer;font-family:inherit;
+}
+nav .cat-item:hover{background:var(--accent-light);color:var(--accent)}
+nav .cat-item.active{background:var(--accent-light);border-left-color:var(--accent);color:var(--accent);font-weight:600}
+main{flex:1;padding:20px;overflow-x:auto;min-width:0}
+h2{font-size:18px;margin-bottom:4px;color:var(--fg)}
+.desc{color:var(--muted);font-size:13px;margin-bottom:16px}
+/* 卡片網格（首頁/搜尋結果） */
+.card-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;
+}
+.card{
+  background:var(--card);border-radius:6px;padding:16px;cursor:pointer;
+  border:1px solid var(--border);transition:all .15s;
+  display:flex;flex-direction:column;gap:6px;
+}
+.card:hover{
+  border-color:var(--accent);box-shadow:0 2px 8px rgba(30,58,95,.12);
+  transform:translateY(-1px);
+}
+.card .icon{
+  width:36px;height:36px;border-radius:6px;background:var(--accent-light);
+  color:var(--accent);display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:700;
+}
+.card .name{font-size:14px;font-weight:600;color:var(--fg)}
+.card .cdesc{font-size:11.5px;color:var(--muted);flex:1}
+.card .count{font-size:11px;color:var(--accent);font-weight:600}
+/* 表格視圖 */
+.table-wrap{background:#fff;border-radius:6px;border:1px solid var(--border);overflow:hidden}
+table{
+  width:100%;border-collapse:collapse;font-size:12.5px;
+}
+th,td{
+  border-bottom:1px solid var(--border);padding:8px 12px;text-align:left;
+  white-space:nowrap;
+}
+th{background:#fafafa;font-weight:600;color:#555;font-size:12px}
+tr:hover td{background:#f0f4f9}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.back-link{
+  display:inline-flex;align-items:center;gap:6px;margin-bottom:12px;
+  color:var(--accent);cursor:pointer;font-size:13px;background:none;border:none;
+  font-family:inherit;padding:0;
+}
+.back-link:hover{text-decoration:underline}
+.note{
+  margin-top:12px;padding:10px 14px;background:#fff8e1;border-left:3px solid #f39c12;
+  font-size:12px;color:#666;border-radius:0 4px 4px 0;
+}
+.result-count{font-size:12px;color:var(--muted);margin-bottom:12px}
+.search-group{margin-bottom:20px}
+.search-group > .grp-title{font-size:14px;font-weight:600;color:var(--fg);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+@media(max-width:768px){
+  header{flex-wrap:wrap;gap:8px;padding:10px}
+  header h1{font-size:14px;width:auto}
+  header .search-wrap{order:3;max-width:100%;flex-basis:100%}
+  .container{flex-direction:column}
+  nav{width:100%;max-height:200px;border-right:none;border-bottom:1px solid var(--border)}
+  main{padding:12px}
+  .card-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="title">工程配管規格百科</h1>
+  <div class="search-wrap">
+    <input type="text" id="search" placeholder="搜尋：例如 2吋、50A、HF、PVDF、NPT..." />
+    <button id="search-btn">搜尋</button>
+  </div>
+  <div class="lang">
+    <select id="lang-select">
+      <option value="zh-Hant" selected>繁體中文</option>
+      <option value="zh-Hans">简体中文</option>
+      <option value="en">English</option>
+      <option value="ja">日本語</option>
+      <option value="de">Deutsch</option>
+      <option value="es">Español</option>
+    </select>
+  </div>
+</header>
+
+<div class="container">
+  <nav id="nav"></nav>
+  <main>
+    <h2 id="page-title"></h2>
+    <div class="desc" id="page-desc"></div>
+    <div class="result-count" id="result-count"></div>
+    <div id="table-area"></div>
+    <div class="note" id="note"></div>
+  </main>
+</div>
+
+<script>
+// ===== 多語言字典 =====
+const I18N = {
+  "zh-Hant":{
+    "title":"工程配管規格百科",
+    "search":"搜尋：例如 2吋、50A、HF、PVDF、NPT...",
+    "note_disclaimer":"本資料僅供工程現場快速參考，實際施工請以原廠型錄與最新規範為準。",
+    "browse_all":"全部資料表",
+    "browse_all_desc":"點選下方卡片進入查詢",
+    "search_results":"搜尋結果",
+    "back_home":"返回首頁",
+    "cat_flange":"法蘭規格",
+    "cat_pipe":"管材規格",
+    "cat_fitting":"管件",
+    "cat_fastener":"螺絲與牙規格",
+    "cat_material":"材質選擇",
+    "cat_valve":"閥門與產品線",
+    "cat_electrical":"電線電纜",
+    "cat_steel":"鋼材與支架",
+    "cat_concrete":"營建混凝土"
+  },
+  "zh-Hans":{
+    "title":"工程配管规格百科",
+    "search":"搜索：例如 2寸、50A、HF、PVDF、NPT...",
+    "note_disclaimer":"本资料仅供工程现场快速参考，实际施工请以原厂型录与最新规范为准。",
+    "browse_all":"全部数据表",
+    "browse_all_desc":"点击卡片进入查询",
+    "search_results":"搜索结果",
+    "back_home":"返回首页",
+    "cat_flange":"法兰规格",
+    "cat_pipe":"管材规格",
+    "cat_fitting":"管件",
+    "cat_fastener":"螺丝与牙规格",
+    "cat_material":"材质选择",
+    "cat_valve":"阀门与产品线",
+    "cat_electrical":"电线电缆",
+    "cat_steel":"钢材与支架",
+    "cat_concrete":"建筑混凝土"
+  },
+  "en":{
+    "title":"Engineering Pipe Spec Encyclopedia",
+    "search":"Search: e.g. 2in, 50A, HF, PVDF, NPT...",
+    "note_disclaimer":"Data for quick field reference only. Always verify with manufacturer catalogs and latest standards.",
+    "browse_all":"All Databases",
+    "browse_all_desc":"Click a card to open",
+    "search_results":"Search Results",
+    "back_home":"Back to home",
+    "cat_flange":"Flanges",
+    "cat_pipe":"Pipe",
+    "cat_fitting":"Fittings",
+    "cat_fastener":"Fasteners & Threads",
+    "cat_material":"Material Selection",
+    "cat_valve":"Valves & Product Lines",
+    "cat_electrical":"Cables & Wires",
+    "cat_steel":"Steel & Supports",
+    "cat_concrete":"Concrete & Masonry"
+  },
+  "ja":{
+    "title":"工学配管規格百科",
+    "search":"検索：例 2インチ、50A、HF、PVDF、NPT...",
+    "note_disclaimer":"現場参考用。実際の施工はメーカーカタログと最新規格に従ってください。",
+    "browse_all":"すべてのデータベース",
+    "browse_all_desc":"カードをクリックして開く",
+    "search_results":"検索結果",
+    "back_home":"ホームに戻る",
+    "cat_flange":"フランジ",
+    "cat_pipe":"配管材",
+    "cat_fitting":"継手",
+    "cat_fastener":"ねじ・管用ねじ",
+    "cat_material":"材質選定",
+    "cat_valve":"バルブ・製品",
+    "cat_electrical":"電線・ケーブル",
+    "cat_steel":"鋼材・支持金具",
+    "cat_concrete":"コンクリート"
+  },
+  "de":{
+    "title":"Technische Rohrleitungs-Datenbank",
+    "search":"Suche: z.B. 2Zoll, 50A, HF, PVDF, NPT...",
+    "note_disclaimer":"Nur zur schnellen Referenz. Immer Herstellerunterlagen und Normen prüfen.",
+    "browse_all":"Alle Tabellen",
+    "browse_all_desc":"Karte anklicken zum Öffnen",
+    "search_results":"Suchergebnisse",
+    "back_home":"Zurück",
+    "cat_flange":"Flansche",
+    "cat_pipe":"Rohre",
+    "cat_fitting":"Fittings",
+    "cat_fastener":"Schrauben & Gewinde",
+    "cat_material":"Werkstoffwahl",
+    "cat_valve":"Armaturen",
+    "cat_electrical":"Kabel",
+    "cat_steel":"Stahl & Stützen",
+    "cat_concrete":"Beton & Mauerwerk"
+  },
+  "es":{
+    "title":"Enciclopedia Técnica de Tuberías",
+    "search":"Buscar: ej. 2plg, 50A, HF, PVDF, NPT...",
+    "note_disclaimer":"Solo referencia rápida. Verificar siempre catálogos del fabricante.",
+    "browse_all":"Todas las tablas",
+    "browse_all_desc":"Haz clic en una tarjeta",
+    "search_results":"Resultados",
+    "back_home":"Volver",
+    "cat_flange":"Bridas",
+    "cat_pipe":"Tuberías",
+    "cat_fitting":"Accesorios",
+    "cat_fastener":"Tornillos y roscas",
+    "cat_material":"Selección de material",
+    "cat_valve":"Válvulas",
+    "cat_electrical":"Cables",
+    "cat_steel":"Acero y soportes",
+    "cat_concrete":"Hormigón"
+  }
+};
+
+// ===== 表頭詞彙六語翻譯 =====
+const HEADER_I18N = {
+  "zh-Hant":{},
+  "zh-Hans":{},
+  "en":{
+    "口徑":"Size","公稱口徑(NPS)":"NPS","公稱口徑NPS":"NPS","公稱口徑DN(mm)":"DN (mm)",
+    "JIS口徑(A)":"JIS Size (A)","規格":"Spec",
+    "鋼管外徑(mm)":"Pipe OD (mm)","外徑OD(mm)":"OD (mm)","外徑OD(mm)":"OD (mm)","外徑(mm)":"OD (mm)","外徑(mm)":"OD (mm)",
+    "法蘭外徑D(mm)":"Flange OD D (mm)","法蘭厚度(mm)":"Thickness (mm)","凸面RF外徑(mm)":"RF Dia (mm)",
+    "厚度t(mm)":"Thickness t (mm)","RF高度f":"RF Height f","RF直徑g":"RF Dia g","PCD C(mm)":"PCD C (mm)",
+    "螺栓孔數n":"Bolt Holes n","螺栓孔徑h(mm)":"Bolt Hole Dia (mm)","螺栓孔徑(mm)":"Bolt Hole Dia (mm)",
+    "螺栓尺寸":"Bolt Size","螺栓規格(英制)":"Bolt Size (inch)","對應公制螺栓":"Metric Bolt",
+    "墊片內徑ID(mm)":"Gasket ID (mm)","墊片外徑OD(mm)":"Gasket OD (mm)","厚度(mm)":"Thickness (mm)",
+    "公稱DN":"DN","英制NPS":"NPS","台灣俗稱":"Local Name",
+    "SCH40壁厚(mm)":"SCH40 Wall (mm)","SCH40內徑ID(mm)":"SCH40 ID (mm)",
+    "SCH80壁厚(mm)":"SCH80 Wall (mm)","SCH80內徑ID(mm)":"SCH80 ID (mm)",
+    "SDR17壁厚(mm)":"SDR17 Wall (mm)","SDR17內徑ID(mm)":"SDR17 ID (mm)","SDR17壓力等級":"SDR17 PN",
+    "SDR11壁厚(mm)":"SDR11 Wall (mm)","SDR11內徑ID(mm)":"SDR11 ID (mm)","SDR11壓力等級":"SDR11 PN",
+    "SDR21壁厚(mm)":"SDR21 Wall (mm)","SDR21內徑ID(mm)":"SDR21 ID (mm)","SDR21壓力等級":"SDR21 PN",
+    "SDR33壁厚(mm)":"SDR33 Wall (mm)","SDR33內徑ID(mm)":"SDR33 ID (mm)","SDR33壓力等級":"SDR33 PN",
+    "內徑ID(mm)":"ID (mm)","壁厚(mm)":"Wall (mm)","對應英制":"NPS","對應英制約":"NPS approx",
+    "產品類別":"Category","GF+系列名稱":"GF+ Series","材質":"Material","口徑範圍":"Size Range",
+    "壓力等級":"Pressure Rating","接端形式":"End Connection","典型用途":"Typical Use","備註":"Remarks",
+    "型號系列":"Model Series","化學品":"Chemical","濃度/狀態":"Concentration / State",
+    "製程用途":"Process Use","常見濃度/配方":"Typical Conc./Formula","推薦管材":"Recommended Pipe",
+    "不適用":"Not Suitable","英文名稱":"English Name","耐溫範圍":"Temp Range",
+    "適用化學品":"Suitable For","不適用場景":"Not Suitable For","成本":"Cost",
+    "膠水型號":"Cement Model","類型":"Type","顏色":"Color","黏度":"Viscosity","固化速度":"Cure Speed",
+    "適用場景":"Application","電纜型式":"Cable Type","芯數/對數":"Cores/Pairs",
+    "導體規格":"Conductor","導體構成":"Stranding","導體外徑(mm)":"Conductor OD (mm)",
+    "完成外徑(mm)":"Overall OD (mm)","約計重量(kg/km)":"Weight (kg/km)",
+    "螺絲規格":"Screw Size","粗牙牙距(mm)":"Pitch (mm)","扳手尺寸(mm)":"Wrench (mm)",
+    "自由鑽孔徑(mm)":"Clearance Hole (mm)",
+    "牙規格系統":"Thread System","牙規格名稱":"Thread Size","類型":"Type",
+    "每吋牙數TPI/牙距":"TPI / Pitch","基準內徑(mm)":"Base ID (mm)","適用場合":"Application",
+    "管件類型":"Fitting Type","英文名稱/縮寫":"English / Abbr.","接頭方式":"Connection","適用材質":"Suitable Material",
+    "口徑範圍":"Size Range"
+  },
+  "ja":{
+    "口徑":"サイズ","公稱口徑(NPS)":"NPS","公稱口徑NPS":"NPS","公稱口徑DN(mm)":"DN (mm)",
+    "JIS口徑(A)":"JIS呼び径(A)","規格":"仕様",
+    "鋼管外徑(mm)":"鋼管外径(mm)","外徑OD(mm)":"外径(mm)","外徑(mm)":"外径(mm)",
+    "法蘭外徑D(mm)":"フランジ外径D(mm)","法蘭厚度(mm)":"フランジ厚さ(mm)","凸面RF外徑(mm)":"RF外径(mm)",
+    "厚度t(mm)":"厚さt(mm)","RF高度f":"RF高さf","RF直徑g":"RF直径g","PCD C(mm)":"PCD C(mm)",
+    "螺栓孔數n":"ボルト穴数n","螺栓孔徑h(mm)":"ボルト穴径(mm)","螺栓孔徑(mm)":"ボルト穴径(mm)",
+    "螺栓尺寸":"ボルトサイズ","螺栓規格(英制)":"ボルト呼び(inch)","對應公制螺栓":"対応メートルねじ",
+    "墊片內徑ID(mm)":"ガスケット内径(mm)","墊片外徑OD(mm)":"ガスケット外径(mm)","厚度(mm)":"厚さ(mm)",
+    "公稱DN":"DN","英制NPS":"NPS","台灣俗稱":"台湾呼び名",
+    "SCH40壁厚(mm)":"SCH40厚さ(mm)","SCH40內徑ID(mm)":"SCH40内径(mm)",
+    "SCH80壁厚(mm)":"SCH80厚さ(mm)","SCH80內徑ID(mm)":"SCH80内径(mm)",
+    "SDR17壁厚(mm)":"SDR17厚さ(mm)","SDR17內徑ID(mm)":"SDR17内径(mm)",
+    "SDR11壁厚(mm)":"SDR11厚さ(mm)","SDR11內徑ID(mm)":"SDR11内径(mm)",
+    "SDR21壁厚(mm)":"SDR21厚さ(mm)","SDR21內徑ID(mm)":"SDR21内径(mm)",
+    "SDR33壁厚(mm)":"SDR33厚さ(mm)","SDR33內徑ID(mm)":"SDR33内径(mm)",
+    "內徑ID(mm)":"内径(mm)","壁厚(mm)":"厚さ(mm)","對應英制":"NPS","對應英制約":"NPS 目安",
+    "產品類別":"製品カテゴリ","GF+系列名稱":"GF+シリーズ","材質":"材質","口徑範圍":"サイズ範囲",
+    "壓力等級":"圧力等级","接端形式":"接続方式","典型用途":"用途","備考":"備考",
+    "型號系列":"シリーズ","化學品":"薬品","濃度/狀態":"濃度/状態",
+    "製程用途":"工程用途","常見濃度/配方":"標準濃度/配合","推薦管材":"推奨配管材",
+    "不適用":"不適","英文名稱":"英名","耐溫範圍":"使用温度範囲",
+    "適用化學品":"適用薬品","不適用場景":"不適用場面","成本":"コスト",
+    "膠水型號":"接着剤型番","類型":"種類","顏色":"色","黏度":"粘度","固化速度":"硬化速度",
+    "適用場景":"用途","電纜型式":"ケーブル種別","芯數/對數":"心線/対数",
+    "導體規格":"導体サイズ","導體構成":"撚り線","導體外徑(mm)":"導体外径(mm)",
+    "完成外徑(mm)":"仕上外径(mm)","約計重量(kg/km)":"重量(kg/km)",
+    "螺絲規格":"ねじサイズ","粗牙牙距(mm)":"ピッチ(mm)","扳手尺寸(mm)":"レンチ(mm)",
+    "自由鑽孔徑(mm)":"下穴径(mm)",
+    "牙規格系統":"ねじ系","牙規格名稱":"ねじ呼び","類型":"種類",
+    "每吋牙數TPI/牙距":"山数/ピッチ","基準內徑(mm)":"基準内径(mm)","適用場合":"用途",
+    "管件類型":"継手種類","英文名稱/縮寫":"英名/略号","接頭方式":"接続","適用材質":"適用材質",
+    "口徑範圍":"サイズ範囲"
+  },
+  "de":{
+    "口徑":"Nennweite","公稱口徑(NPS)":"NPS","公稱口徑NPS":"NPS","公稱口徑DN(mm)":"DN (mm)",
+    "JIS口徑(A)":"JIS NW (A)","規格":"Spez.",
+    "鋼管外徑(mm)":"Rohr AD (mm)","外徑OD(mm)":"AD (mm)","外徑(mm)":"AD (mm)",
+    "法蘭外徑D(mm)":"Flansch AD D (mm)","法蘭厚度(mm)":"Dicke (mm)","凸面RF外徑(mm)":"RF AD (mm)",
+    "厚度t(mm)":"Dicke t (mm)","RF高度f":"RF Höhe f","RF直徑g":"RF Ø g","PCD C(mm)":"Teilkreis (mm)",
+    "螺栓孔數n":"Bohrungen n","螺栓孔徑h(mm)":"Bohrungs-Ø (mm)","螺栓孔徑(mm)":"Bohrungs-Ø (mm)",
+    "螺栓尺寸":"Schraubengr.","螺栓規格(英制)":"Schraube (Zoll)","對應公制螺栓":"Metrische Schraube",
+    "墊片內徑ID(mm)":"Dichtung ID (mm)","墊片外徑OD(mm)":"Dichtung AD (mm)","厚度(mm)":"Dicke (mm)",
+    "公稱DN":"DN","英制NPS":"NPS","台灣俗稱":"Taiwan-Name",
+    "SCH40壁厚(mm)":"SCH40 Wand (mm)","SCH40內徑ID(mm)":"SCH40 ID (mm)",
+    "SCH80壁厚(mm)":"SCH80 Wand (mm)","SCH80內徑ID(mm)":"SCH80 ID (mm)",
+    "SDR17壁厚(mm)":"SDR17 Wand (mm)","SDR17內徑ID(mm)":"SDR17 ID (mm)",
+    "SDR11壁厚(mm)":"SDR11 Wand (mm)","SDR11內徑ID(mm)":"SDR11 ID (mm)",
+    "內徑ID(mm)":"ID (mm)","壁厚(mm)":"Wand (mm)","對應英制":"NPS","對應英制約":"NPS ca.",
+    "產品類別":"Kategorie","GF+系列名稱":"GF+ Serie","材質":"Werkstoff","口徑範圍":"NW-Bereich",
+    "壓力等級":"Druckstufe","接端形式":"Anschluss","典型用途":"Einsatz","備註":"Bemerkung",
+    "型號系列":"Baureihe","化學品":"Chemikalie","濃度/狀態":"Konzentration",
+    "製程用途":"Prozess","常見濃度/配方":"Typ. Konz.","推薦管材":"Empfohlenes Rohr",
+    "不適用":"Ungeeignet","英文名稱":"Engl. Name","耐溫範圍":"Temp.-Bereich",
+    "適用化學品":"Geeignet für","不適用場景":"Nicht für","成本":"Kosten",
+    "膠水型號":"Kleber-Typ","類型":"Typ","顏色":"Farbe","黏度":"Viskosität","固化速度":"Aushärtung",
+    "適用場景":"Anwendung","電纜型式":"Kabeltyp","芯數/對數":"Adern/Paare",
+    "導體規格":"Leiterquerschnitt","導體構成":"Litze","導體外徑(mm)":"Leiter-Ø (mm)",
+    "完成外徑(mm)":"Außen-Ø (mm)","約計重量(kg/km)":"Gewicht (kg/km)",
+    "螺絲規格":"Schraube","粗牙牙距(mm)":"Teilung (mm)","扳手尺寸(mm)":"Schlüssel (mm)",
+    "自由鑽孔徑(mm)":"Bohrung (mm)",
+    "牙規格系統":"Gewindenorm","牙規格名稱":"Gewindegröße","類型":"Typ",
+    "每吋牙數TPI/牙距":"Gänge/Zoll","基準內徑(mm)":"Bezugs-ID (mm)","適用場合":"Anwendung",
+    "管件類型":"Fitting-Typ","英文名稱/縮寫":"Engl./Abk.","接頭方式":"Anschluss","適用材質":"Werkstoffe",
+    "口徑範圍":"NW-Bereich"
+  },
+  "es":{
+    "口徑":"Diámetro","公稱口徑(NPS)":"NPS","公稱口徑NPS":"NPS","公稱口徑DN(mm)":"DN (mm)",
+    "JIS口徑(A)":"JIS DN (A)","規格":"Espec.",
+    "鋼管外徑(mm)":"OD tubería (mm)","外徑OD(mm)":"OD (mm)","外徑(mm)":"OD (mm)",
+    "法蘭外徑D(mm)":"OD brida D (mm)","法蘭厚度(mm)":"Espesor brida (mm)","凸面RF外徑(mm)":"OD RF (mm)",
+    "厚度t(mm)":"Espesor t (mm)","RF高度f":"Altura RF f","RF直徑g":"Ø RF g","PCD C(mm)":"PCD C (mm)",
+    "螺栓孔數n":"Taladros n","螺栓孔徑h(mm)":"Ø taladro (mm)","螺栓孔徑(mm)":"Ø taladro (mm)",
+    "螺栓尺寸":"Tornillo","螺栓規格(英制)":"Tornillo (pulg)","對應公制螺栓":"Tornillo métrico",
+    "墊片內徑ID(mm)":"ID junta (mm)","墊片外徑OD(mm)":"OD junta (mm)","厚度(mm)":"Espesor (mm)",
+    "公稱DN":"DN","英制NPS":"NPS","台灣俗稱":"Nombre local",
+    "SCH40壁厚(mm)":"SCH40 pared (mm)","SCH40內徑ID(mm)":"SCH40 ID (mm)",
+    "SCH80壁厚(mm)":"SCH80 pared (mm)","SCH80內徑ID(mm)":"SCH80 ID (mm)",
+    "SDR17壁厚(mm)":"SDR17 pared (mm)","SDR17內徑ID(mm)":"SDR17 ID (mm)",
+    "SDR11壁厚(mm)":"SDR11 pared (mm)","SDR11內徑ID(mm)":"SDR11 ID (mm)",
+    "內徑ID(mm)":"ID (mm)","壁厚(mm)":"Pared (mm)","對應英制":"NPS","對應英制約":"NPS aprox.",
+    "產品類別":"Categoría","GF+系列名稱":"Serie GF+","材質":"Material","口徑範圍":"Rango tamaños",
+    "壓力等級":"Presión","接端形式":"Conexión","典型用途":"Uso típico","備註":"Notas",
+    "型號系列":"Serie modelo","化學品":"Químico","濃度/狀態":"Concentración",
+    "製程用途":"Proceso","常見濃度/配方":"Conc. típica","推薦管材":"Tubo recomendado",
+    "不適用":"No adecuado","英文名稱":"Nombre inglés","耐溫範圍":"Rango temp.",
+    "適用化學品":"Apto para","不適用場景":"No apto para","成本":"Costo",
+    "膠水型號":"Tipo cemento","類型":"Tipo","顏色":"Color","黏度":"Viscosidad","固化速度":"Curado",
+    "適用場景":"Aplicación","電纜型式":"Tipo cable","芯數/對數":"Hilos/pares",
+    "導體規格":"Conductor","導體構成":"Trenzado","導體外徑(mm)":"Ø conductor (mm)",
+    "完成外徑(mm)":"Ø total (mm)","約計重量(kg/km)":"Peso (kg/km)",
+    "螺絲規格":"Tornillo","粗牙牙距(mm)":"Paso (mm)","扳手尺寸(mm)":"Llave (mm)",
+    "自由鑽孔徑(mm)":"Taladro libre (mm)",
+    "牙規格系統":"Sistema rosca","牙規格名稱":"Medida rosca","類型":"Tipo",
+    "每吋牙數TPI/牙距":"Hilos/pulg.","基準內徑(mm)":"ID base (mm)","適用場合":"Aplicación",
+    "管件類型":"Tipo fitting","英文名稱/縮寫":"Ingl./Abrev.","接頭方式":"Conexión","適用材質":"Materiales",
+    "口徑範圍":"Rango tamaños"
+  }
+};
+
+// ===== 細項名稱六語 =====
+const ITEM_I18N = {
+  "jis10k":{"en":"JIS 10K Flange","ja":"JIS 10K フランジ","de":"JIS 10K Flansch","es":"Brida JIS 10K","zh-Hans":"JIS 10K 法兰"},
+  "ansi150":{"en":"ANSI Class 150 Flange","ja":"ANSI 150 フランジ","de":"ANSI Class 150","es":"Brida ANSI 150","zh-Hans":"ANSI Class 150 法兰"},
+  "gasket":{"en":"Gasket Dimensions","ja":"ガスケット寸法","de":"Dichtungen","es":"Medidas junta","zh-Hans":"法兰垫片尺寸"},
+  "nominal":{"en":"Nominal Size Chart","ja":"呼び径対照表","de":"Nennweiten-Übersicht","es":"Tabla nominal","zh-Hans":"公称管径对照"},
+  "pvc":{"en":"PVC SCH40/SCH80","ja":"PVC SCH40/SCH80","de":"PVC SCH40/SCH80","es":"PVC SCH40/SCH80","zh-Hans":"PVC SCH40/SCH80"},
+  "hdpe":{"en":"HDPE Pipe","ja":"HDPE管","de":"HDPE-Rohr","es":"Tubo HDPE","zh-Hans":"HDPE/PE 管"},
+  "pfa":{"en":"PFA Tubing","ja":"PFAチューブ","de":"PFA-Schlauch","es":"Tubo PFA","zh-Hans":"PFA 软管"},
+  "pvdf":{"en":"PVDF Pipe","ja":"PVDF管","de":"PVDF-Rohr","es":"Tubo PVDF","zh-Hans":"PVDF 管"},
+  "fittings":{"en":"Fittings Overview","ja":"継手一覧","de":"Fittings-Übersicht","es":"Accesorios","zh-Hans":"化工管件总览"},
+  "bolt":{"en":"Metric Bolts","ja":"メートルねじ","de":"Metrische Schrauben","es":"Tornillos métricos","zh-Hans":"公制螺丝规格"},
+  "thread":{"en":"Thread Reference","ja":"ねじ規格一覧","de":"Gewinde-Übersicht","es":"Tabla de roscas","zh-Hans":"牙规格总表"},
+  "chem":{"en":"Chemical Compatibility","ja":"薬品耐性一覧","de":"Chemische Beständigkeit","es":"Compatibilidad química","zh-Hans":"化工材质耐蚀对照"},
+  "cement":{"en":"Cement & Adhesives","ja":"接着剤","de":"Kleber & Schweißen","es":"Cementos y adhesivos","zh-Hans":"胶水接着剂"},
+  "semi":{"en":"Semiconductor Chemicals","ja":"半導体薬品","de":"Halbleiter-Chemie","es":"Químicos semiconductor","zh-Hans":"半导体化学品对照"},
+  "gasket_mat":{"en":"Gasket Material Selection","ja":"ガスケット材質選定","de":"Dichtungswerkstoffe","es":"Selección de junta","zh-Hans":"垫片材质选择"},
+  "gf":{"en":"GF+ Product Line","ja":"GF+製品","de":"GF+ Produktlinie","es":"Línea GF+","zh-Hans":"GF+ 产品线"},
+  "shieyu":{"en":"Shie Yu Product Line","ja":"Shie Yu製品","de":"Shie Yu Armaturen","es":"Línea Shie Yu","zh-Hans":"协羽产品线"},
+  "cable":{"en":"Cable & Wire Specs","ja":"電線・ケーブル","de":"Kabel & Leitungen","es":"Cables y alambres","zh-Hans":"电线电缆规格"},
+  "pneumatic":{"en":"Pneumatic Tubing (PU/Nylon)","ja":"エアーチューブ(PU/ナイロン)","de":"Pneumatikschlauch (PU/Nylon)","es":"Tubo neumático (PU/Nylon)","zh-Hans":"气源管(PU/尼龙)"},
+  "conduit":{"en":"Electrical Conduit","ja":"電線管","de":"Elektro-Rohr","es":"Tubo conduit","zh-Hans":"电线导管"},
+  "pipe_mat":{"en":"Pipe Material Overview","ja":"配管材質一覧","de":"Rohrwerkstoffe","es":"Materiales de tubería","zh-Hans":"管材材质总览"},
+  "pvc_grade":{"en":"Taiwan PVC Pipe Grades","ja":"台湾PVC管グレード","de":"Taiwan PVC-Rohrklassen","es":"Grados PVC Taiwán","zh-Hans":"台湾PVC管等级"},
+  "stainless":{"en":"Stainless Steel Pipe","ja":"ステンレス鋼管","de":"Edelstahlrohr","es":"Tubo inoxidable","zh-Hans":"不锈钢管"},
+  "ppr":{"en":"PPR Pipe Sizes","ja":"PPR管サイズ","de":"PPR-Rohr","es":"Tubo PPR","zh-Hans":"PPR管尺寸"},
+  "copper":{"en":"Copper Tube","ja":"銅管","de":"Kupferrohr","es":"Tubo cobre","zh-Hans":"铜管尺寸"},
+  "torque":{"en":"Bolt Torque Values","ja":"ボルト締付トルク","de":"Schrauben Drehmoment","es":"Torque tornillos","zh-Hans":"螺栓锁紧扭力"},
+  "metal_grade":{"en":"Metal Pipe Grades","ja":"金属配管材質","de":"Metallrohrgüten","es":"Tipos tubo metal","zh-Hans":"金属管材材质"},
+  "rubber":{"en":"Rubber Sealing Materials","ja":"ゴムシール材質","de":"Gummi-Dichtung","es":"Juntas goma","zh-Hans":"橡胶密封材质"},
+  "wirecolor":{"en":"Wire Color Codes","ja":"電線色別","de":"Aderfarben","es":"Colores cables","zh-Hans":"电线色码"},
+  "angle":{"en":"Structural Steel Sections","ja":"形鋼","de":"Stahlprofile","es":"Perfiles acero","zh-Hans":"型钢尺寸"},
+  "plate":{"en":"Steel Plate Thickness","ja":"鋼板厚","de":"Stahlblech","es":"Placa acero","zh-Hans":"钢板厚度"},
+  "oring":{"en":"O-Ring Sizes","ja":"Oリングサイズ","de":"O-Ring","es":"Juntas tóricas","zh-Hans":"O型圈规格"},
+  "concrete":{"en":"Concrete Strength Grades","ja":"コンクリート強度","de":"Betongüteklasse","es":"Grados hormigón","zh-Hans":"混凝土强度等级"},
+  "rebar":{"en":"Rebar Sizes","ja":"鉄筋径","de":"Bewehrungsstahl","es":"Acero corrugado","zh-Hans":"钢筋尺寸"},
+  "mortar":{"en":"Cement Mortar Mix","ja":"モルタル調合","de":"Mörtel","es":"Mortero","zh-Hans":"水泥砂浆配比"},
+  "slope":{"en":"Drainage Slopes","ja":"排水勾配","de":"Gefälle","es":"Pendiente alcantarillado","zh-Hans":"排水管坡度"}
+};
+
+// ===== 資料分類 =====
+const CATEGORIES = [
+  {id:"jis10k", cat:"cat_flange", name:"JIS 10K 法蘭尺寸", desc:"日系規格 10A～1000A"},
+  {id:"ansi150", cat:"cat_flange", name:"ANSI Class 150 法蘭", desc:"美規 NPS 1/2\"～24\""},
+  {id:"gasket", cat:"cat_flange", name:"法蘭墊片尺寸", desc:"JIS 10K + ANSI 150LB"},
+  {id:"nominal", cat:"cat_pipe", name:"公稱管徑對照", desc:"JIS/DN/NPS/外徑/俗稱"},
+  {id:"pvc", cat:"cat_pipe", name:"PVC SCH40/SCH80", desc:"1/2\"～24\""},
+  {id:"hdpe", cat:"cat_pipe", name:"HDPE/PE 管", desc:"DN20～630 SDR17/SDR11"},
+  {id:"pfa", cat:"cat_pipe", name:"PFA 軟管", desc:"半導體級"},
+  {id:"pvdf", cat:"cat_pipe", name:"PVDF 管", desc:"DN20～250"},
+  {id:"pneumatic", cat:"cat_pipe", name:"氣源管(PU/尼龍)", desc:"氣壓軟管尺寸"},
+  {id:"pipe_mat", cat:"cat_pipe", name:"管材材質總覽", desc:"PVC/CPVC/PP/PE/PVDF特性"},
+  {id:"pvc_grade", cat:"cat_pipe", name:"台灣PVC管等級", desc:"A/B/S管 × D/E/O/W用途"},
+  {id:"stainless", cat:"cat_pipe", name:"不鏽鋼管(SUS304/316)", desc:"Sch10S/Sch40S"},
+  {id:"ppr", cat:"cat_pipe", name:"PPR管尺寸", desc:"PN10/PN16/PN20"},
+  {id:"copper", cat:"cat_pipe", name:"銅管尺寸", desc:"空調/製程用"},
+  {id:"metal_grade", cat:"cat_pipe", name:"金屬管材材種", desc:"碳鋼/不鏽鋼/鍍鋅/銅"},
+  {id:"fittings", cat:"cat_fitting", name:"化工管件總覽", desc:"三通/彎頭/大小頭/接頭"},
+  {id:"bolt", cat:"cat_fastener", name:"公制螺絲規格", desc:"M3～M36"},
+  {id:"thread", cat:"cat_fastener", name:"牙規格總表", desc:"NPT/PT/公制/mini"},
+  {id:"torque", cat:"cat_fastener", name:"螺栓鎖緊扭力", desc:"8.8級/A2-70不鏽鋼"},
+  {id:"chem", cat:"cat_material", name:"化工材質耐蝕對照", desc:"一般酸鹼溶劑"},
+  {id:"cement", cat:"cat_material", name:"膠水接著劑", desc:"Weld-On/南亞/熱熔"},
+  {id:"semi", cat:"cat_material", name:"半導體化學品對照", desc:"HF/SC1/SC2/TMAH"},
+  {id:"gasket_mat", cat:"cat_material", name:"墊片材質選擇", desc:"EPDM/Viton/PTFE"},
+  {id:"rubber", cat:"cat_material", name:"橡膠密封材質", desc:"NBR/EPDM/Viton/矽膠"},
+  {id:"gf", cat:"cat_valve", name:"GF+ 產品線", desc:"SYGEF/球閥/隔膜閥"},
+  {id:"shieyu", cat:"cat_valve", name:"協羽 Shie Yu 產品線", desc:"台灣本地塑膠閥門"},
+  {id:"cable", cat:"cat_electrical", name:"電線電纜規格", desc:"VVF/VV/儀表電纜"},
+  {id:"conduit", cat:"cat_electrical", name:"電線導管規格", desc:"PVC硬管/CD管/鍍鋅鋼管"},
+  {id:"wirecolor", cat:"cat_electrical", name:"電線色碼標準", desc:"L1/L2/L3/N/接地"},
+  {id:"angle", cat:"cat_steel", name:"型鋼尺寸", desc:"角鋼/槽鋼/H型鋼"},
+  {id:"plate", cat:"cat_steel", name:"鋼板厚度規格", desc:"常用公稱厚度"},
+  {id:"oring", cat:"cat_material", name:"O型圈規格", desc:"公制ID×線徑"},
+  {id:"concrete", cat:"cat_concrete", name:"混凝土強度等級", desc:"f'c 對照用途"},
+  {id:"rebar", cat:"cat_concrete", name:"鋼筋尺寸", desc:"#3～#10 直徑"},
+  {id:"mortar", cat:"cat_concrete", name:"水泥砂漿配比", desc:"水泥:砂 用途"},
+  {id:"slope", cat:"cat_concrete", name:"排水管坡度", desc:"污水/雨水/地坪"}
+];
+
+// ===== 資料 =====
+const DATA = {"gf":{"headers":["產品類別","GF+系列名稱","材質","口徑範圍","壓力等級","接端形式","典型用途","備註"],"rows":[["管材","SYGEF Standard","PVDF","DN20~315(1/2\"~12\")","PN16(20-110mm)/PN10(160-315mm)","熱熔對焊/承插","半導體高純度/腐蝕性化學品","-20~140°C"],["管材","SYGEF Plus","PVDF(高純級)","DN20~315","PN16/PN10","熱熔對焊/承插","半導體廠電子級","超高純度"],["管材","SYGEF Plus PP","PP-H","DN20~315","PN16/PN10","熱熔對焊/承插","化工一般腐蝕性流體",""],["管材","PVC-U/PVC-C","PVC/CPVC","DN16~400(1/2\"~16\")","PN10/PN16","溶接承插/法蘭","給水/一般化工",""],["管材","ELGEF Plus","PE100","DN20~1000","PN10(氣體)/PN16(水)","熱熔對焊","埋地/給水/污泥",""],["管件","SYGEF Fittings","PVDF","DN20~315","同管材","熱熔/承插","配合PVDF管","-"],["球閥","Type 546 Pro","PVDF/PP/PVC","DN10~100(3/8\"~4\")","PN10/PN16","True Union雙由令","一般化工開關閥門","FKM/EPDM可選"],["球閥","Type 543 Pro","PVC/PP","DN15~100","PN10/PN16","True Union","給水/一般化工",""],["球閥","Type 540/542","PVC/PP","DN15~50","PN10","承插/牙接","小型儀表/取樣",""],["球閥","3-way Type 543","PVC/PP","DN15~50","PN10","True Union","分流/切換",""],["隔膜閥","Type 317","PVDF/PP","PVDF:DN15~150;PP:DN15~150","PN10","法蘭/承插","腐蝕性化學品/漿料","PTFE/EPDM膜片"],["隔膜閥","True Union Diaphragm","PVC/PP/PVDF","DN15~50","PN10","承插/牙接","小口徑腐蝕性流體",""],["蝶閥","Type 565","PVDF/PP/PVC","DN50~600","PN10","法蘭式(ISO/DIN/ANSI)","大口徑給水/海水淡化","短結構長度"],["止回閥","Type 591/592","PVC/PP/PVDF","DN15~100","PN10","承插/法蘭","防止逆流",""],["過濾器","Y-Strainer Type 545","PVC/PP/PVDF","DN15~100","PN10","承插/法蘭","管路過濾",""],["視流器","Type 568","PVC/PP","DN15~50","PN10","承插/法蘭","觀察流動",""],["自動化驅動","PA系列氣動執行器","鋁/不鏽鋼","適配DN15~300閥門","—","氣動5~7bar","自動化工廠遠端控制",""],["自動化驅動","EA系列電動執行器","鋁","適配DN15~300閥門","—","電源24V/230V","無氣源場景遠端控制",""],["感測器","電導率/pH/壓力感測器","PVDF/PVDF本體","DN15~50","PN10","承插/法蘭","製程監測",""],["熱熔工具","承插/對焊機","—","DN20~315","—","—","現場安裝",""]]},"shieyu":{"headers":["產品類別","型號系列","材質","口徑範圍","壓力等級","接端形式","備註"],"rows":[["UPVC/CPVC SCH80管","標準管","UPVC/CPVC","1/4\"~12\"","PN16","承插","透明/灰色"],["PP/PVDF管","標準管","PP/PVDF","DN15~DN150","PN10/PN16","熱熔/承插",""],["安全球閥(單由令)","CB Series","UPVC/PP/CPVC/PVDF","DN15~DN50","PN10","單由令",""],["雙由令球閥","CD Series","UPVC/PP/CPVC/PVDF","DN15~DN100","PN10","True Union","最常用"],["安全球閥加埋銅座","CH Series","UPVC/PP","DN15~DN50","PN10","單由令","高壓需要"],["隔膜閥","DE300","UPVC/PP/CPVC/PVDF","DN15~DN150","PN10","法蘭/承插","膜片EPDM/HYPALON/TEFLON/PVDF三層"],["蝶閥","—","UPVC/PP/PVDF","DN50~DN300","PN10","法蘭式",""],["球型逆止閥","—","UPVC/PP/PVDF","DN15~DN100","PN10","承插/法蘭",""],["彈簧逆止閥","—","UPVC/PP","DN15~DN50","PN10","承插",""],["Y型過濾器","—","UPVC/PP/PVDF","DN15~DN100","PN10","承插/法蘭",""],["電動/氣動閥","—","UPVC/PP/PVDF","DN15~DN100","PN10","搭配球閥/蝶閥",""],["油任接頭(由令)","—","UPVC/CPVC","DN15~DN100","PN10","承插",""],["法蘭(兩片式/焊接)","—","UPVC/CPVC","DN15~DN300","PN10","法蘭面","JIS/ANSI/DIN"],["液面計/水位計凡而","—","UPVC/PP","DN15~DN25","PN10","牙接",""],["快速接頭","—","UPVC/PP","DN15~DN25","PN10","承插",""]]},"pvc":{"headers":["公稱口徑(NPS)","台灣俗稱","外徑OD(mm)","SCH40壁厚(mm)","SCH40內徑ID(mm)","SCH80壁厚(mm)","SCH80內徑ID(mm)","備註"],"rows":[["1/2\"","4分","21.30","2.77","15.76","3.73","13.84",""],["3/4\"","6分","26.70","2.87","20.96","3.91","18.88",""],["1\"","1吋","33.40","3.38","26.64","4.55","24.30",""],["1-1/4\"","1吋2","42.20","3.56","35.08","4.85","32.50",""],["1-1/2\"","1吋半","48.30","3.68","40.94","5.08","38.14",""],["2\"","2吋","60.30","3.91","52.48","5.54","49.22",""],["2-1/2\"","2吋半","73.00","5.16","62.68","7.14","58.72",""],["3\"","3吋","88.90","5.49","77.92","7.62","73.66",""],["4\"","4吋","114.30","6.02","102.26","8.56","97.18",""],["5\"","5吋","141.30","6.55","128.20","9.52","122.26",""],["6\"","6吋","168.28","7.11","154.06","10.97","146.34",""],["8\"","8吋","219.08","8.18","202.72","12.70","193.68",""],["10\"","10吋","273.05","9.27","254.51","15.09","242.87",""],["12\"","12吋","323.85","10.31","303.23","17.45","288.95",""],["14\"","14吋","355.60","11.10","333.40","19.05","317.50",""],["16\"","16吋","406.40","12.70","381.00","21.41","363.58",""],["18\"","18吋","457.20","14.27","428.66","23.80","409.60",""],["20\"","20吋","508.00","15.06","477.88","26.19","455.62",""],["24\"","24吋","609.60","17.45","574.70","30.94","547.72",""]]},"semi":{"headers":["化學品","製程用途","常見濃度/配方","推薦管材","不適用","備註"],"rows":[["氫氟酸HF","清洗/蝕刻氧化層","DHF 1:100~1:200","PFA/PTFE/CPVC","304/316不鏽鋼","劇毒、腐蝕玻璃"],["緩衝氫氟酸BHF","氧化層選擇性蝕刻","HF:NH4F=1:200~400","PFA/PTFE","304/316",""],["硫酸H2SO4","清洗/有機剝除/piranha","濃98%","CPVC/PP/PVC(室溫)","304(高溫)","piranha=H2SO4+H2O2"],["硝酸HNO3","蝕刻/清洗","稀釋~濃","CPVC/PP/PVC","316(長期)",""],["鹽酸HCl","清洗/酸洗","稀釋~37%","PVC/CPVC/PP","304/316(氯離子)",""],["SC1清洗","RCA清洗","NH4OH:H2O2:H2O=1:1:5","PVC/PP/CPVC","—","去除顆粒/有機物"],["SC2清洗","RCA清洗","HCl:H2O2:H2O=1:1:6","PVC/PP/CPVC","—","去除金屬污染物"],["TMAH","顯影液/蝕刻","2.38%","PVC/PP/PFA","—","正光阻顯影液"],["光刻膠Photoresist","黃光製程","ArF/KrF/EUV","PFA/PP","—","日本供應為主"],["NMP","光阻剝離/清洗","溶劑","PVDF/PTFE/PFA","PVC/PP(長期)","欧盟REACH管制"],["IPA異丙醇","清洗/乾燥","電子級","PVC/PP/PFA","—","Marangoni乾燥"],["氨水NH4OH","SC1/CVD","29%","PVC/PP","—",""],["雙氧水H2O2","清洗/piranha","30~35%","PVC/CPVC/PP","—","氧化劑"],["CMP研磨液","平坦化","漿料(二氧化矽/鈰)","PP/PVDF","—","懸浮液"],["氫氧化鈉NaOH","清洗/蝕刻","稀釋~50%","PVC/PP/316","—",""],["稀釋氫氟酸DHF","氧化層剝除","0.49~2%","PFA/CPVC","304/316",""]]},"gasket_mat":{"headers":["材質","英文名稱","耐溫範圍","適用化學品","不適用場景","壓力等級","成本","備註"],"rows":[["EPDM","三元乙丙橡膠","-40～+150°C","清水/廢水/弱酸弱鹼/鹼性溶液/蒸汽/氨水","石油系油品/汽油/烴類溶劑/鹵化烴","PN16以內","低","自來水、給水管線首選"],["VITON (FKM)","氟橡膠","-20～+200°C","礦物油/汽油/燃料油/弱酸/鹼/烴類溶劑/氯氣","酮類(丙酮)/強鹼/胺類/熱水蒸汽","PN16以內","中","耐油耐溶劑，化工/油類首選"],["PTFE包覆墊片(內EPDM)","PTFE Envelope/EPDM","-40～+150°C","幾乎所有酸鹼溶劑(由PTFE接觸介質)/高純度化學品/半導體級","高溫>150°C內層EPDM會老化","PN16以內","中高","PTFE外皮接觸化學品，EPDM提供彈性回復，最常用的化工墊片"],["純PTFE墊片","Virgin PTFE","-200～+260°C","強酸/強鹼/有機溶劑/幾乎所有化學品(除熔融鹼金屬/氟氣)","高溫高壓會冷流潛變，需選加填充配方","PN16以內","高","半導體/高純度製程首選，缺點是彈性差需較高鎖緊扭力"]]},"gasket":{"headers":["法蘭規格","公稱口徑","墊片內徑ID(mm)","墊片外徑OD(mm)","厚度(mm)","備註"],"rows":[["ANSI-150LB","1/2\"","21","48","3","RF環型墊片"],["ANSI-150LB","3/4\"","27","57","3",""],["ANSI-150LB","1\"","33","67","3",""],["ANSI-150LB","1-1/4\"","42","76","3",""],["ANSI-150LB","1-1/2\"","48","86","3",""],["ANSI-150LB","2\"","60","106","3",""],["ANSI-150LB","2-1/2\"","73","124","3",""],["ANSI-150LB","3\"","89","137","3",""],["ANSI-150LB","3-1/2\"","102","157","3",""],["ANSI-150LB","4\"","114","206","3","swiftsupplies數據"],["ANSI-150LB","5\"","141","197","3",""],["ANSI-150LB","6\"","168","222","3",""],["ANSI-150LB","8\"","219","279","3",""],["ANSI-150LB","10\"","273","340","3",""],["ANSI-150LB","12\"","324","405","3","推估"],["ANSI-150LB","14\"","356","451","3",""],["ANSI-150LB","16\"","406","508","3","推估"],["ANSI-150LB","20\"","508","630","3","推估"],["ANSI-150LB","24\"","610","745","3","推估"],["JIS-10K","10A(3/8\")","18","52","3",""],["JIS-10K","15A(1/2\")","22","55","3",""],["JIS-10K","20A(3/4\")","27","60","3",""],["JIS-10K","25A(1\")","34","75","3",""],["JIS-10K","32A(1-1/4\")","42","90","3",""],["JIS-10K","40A(1-1/2\")","48","100","3",""],["JIS-10K","50A(2\")","60","120","3","對應法蘭PCD 120"],["JIS-10K","65A(2-1/2\")","76","140","3",""],["JIS-10K","80A(3\")","89","150","3",""],["JIS-10K","100A(4\")","114","185","3","對應法蘭PCD 175"],["JIS-10K","125A(5\")","140","220","3",""],["JIS-10K","150A(6\")","165","240","3","對應法蘭PCD 240"],["JIS-10K","200A(8\")","216","290","3","對應法蘭PCD 290"],["JIS-10K","250A(10\")","267","355","3",""],["JIS-10K","300A(12\")","318","410","3",""],["JIS-10K","350A(14\")","356","460","3",""],["JIS-10K","400A(16\")","406","515","3",""],["JIS-10K","450A(18\")","457","565","3",""],["JIS-10K","500A(20\")","508","620","3",""],["JIS-10K","600A(24\")","610","730","3",""]]},"ansi150":{"headers":["公稱口徑NPS","外徑OD(mm)","法蘭厚度(mm)","凸面RF外徑(mm)","螺栓PCD(mm)","螺栓孔數","螺栓孔徑(mm)","螺栓規格(英制)","對應公制螺栓","備註"],"rows":[["1/2\"","88.9","11.1","34.9","60.3","4","15.9","1/2\"","M12",""],["3/4\"","98.4","12.7","42.9","69.8","4","15.9","1/2\"","M12",""],["1\"","107.9","14.3","50.8","79.4","4","15.9","1/2\"","M12",""],["1-1/4\"","117.5","15.9","63.5","88.9","4","15.9","1/2\"","M12",""],["1-1/2\"","127.0","17.5","73.0","98.4","4","15.9","1/2\"","M12",""],["2\"","152.4","19.0","92.1","120.6","4","19.0","5/8\"","M16",""],["2-1/2\"","177.8","20.6","104.6","139.7","4","19.0","5/8\"","M16",""],["3\"","190.5","23.8","127.0","152.4","4","19.0","5/8\"","M16",""],["3-1/2\"","215.9","23.8","139.7","177.8","8","19.0","5/8\"","M16",""],["4\"","228.6","23.8","157.2","190.5","8","19.0","5/8\"","M16",""],["5\"","254.0","23.8","185.7","215.9","8","22.2","3/4\"","M20",""],["6\"","279.4","25.4","215.9","241.3","8","22.2","3/4\"","M20",""],["8\"","342.9","28.6","269.9","298.4","8","22.2","3/4\"","M20",""],["10\"","406.4","30.2","323.8","361.9","12","25.4","7/8\"","M22",""],["12\"","482.6","31.7","381.0","431.8","12","25.4","7/8\"","M22",""],["14\"","533.4","34.9","412.7","476.2","12","28.6","1\"","M24",""],["16\"","596.9","36.5","469.9","539.7","16","28.6","1\"","M24",""],["18\"","660.4","39.7","533.4","596.9","16","31.7","1-1/8\"","M27",""],["20\"","698.5","42.9","584.2","635.0","20","31.7","1-1/8\"","M27",""],["24\"","812.8","47.6","692.1","749.3","20","34.9","1-1/4\"","M30",""]]},"cement":{"headers":["膠水型號","類型","顏色","黏度","固化速度","適用場景","備註"],"rows":[["Weld-On 4","PVC溶劑膠","透明","低","快乾","小口徑PVC、電線管、低壓管路","快速接著"],["Weld-On 711","PVC溶劑膠","透明/灰","中","中速","一般給水、灌溉、電線管","通用型"],["Weld-On 717","PVC溶劑膠","透明/灰","高","中速","工業級、大口徑PVC、填縫佳","低VOC"],["Weld-On 718","PVC溶劑膠","透明","高","慢乾","大口徑、厚壁、需要長調整時間","重型"],["南亞硬質膠","PVC溶劑膠","黃/透明","中","中速","南亞PVC管專用","台灣現場常用"],["CPVC專用膠","CPVC溶劑膠","黃","中","中速","CPVC管專用","不可混用PVC膠"],["PP熱熔焊","熱熔焊接","本體色","—","加熱熔化","PP/PE管接頭","需熱熔器"]]},"pvdf":{"headers":["公稱口徑DN(mm)","對應英制","外徑OD(mm)","SDR21壁厚(mm)","SDR21內徑ID(mm)","SDR21壓力等級","SDR33壁厚(mm)","SDR33內徑ID(mm)","SDR33壓力等級","備註"],"rows":[["20","1/2\"","20.0","1.9","16.2","PN16/230PSI","—","—","—","超高純度半導體級"],["25","3/4\"","25.0","1.9","21.2","PN16/230PSI","—","—","—",""],["32","1\"","32.0","2.4","27.2","PN16/230PSI","—","—","—",""],["40","1-1/4\"","40.0","2.4","35.2","PN16/230PSI","—","—","—",""],["50","1-1/2\"","50.0","3.0","44.0","PN16/230PSI","—","—","—",""],["63","2\"","63.0","3.0","57.0","PN16/230PSI","—","—","—",""],["75","2-1/2\"","75.0","3.6","67.8","PN16/230PSI","—","—","—",""],["90","3\"","90.0","4.3","81.4","PN16/230PSI","2.8","84.4","PN10/150PSI",""],["110","4\"","110.0","5.3","99.4","PN16/230PSI","3.4","103.2","PN10/150PSI",""],["160","6\"","160.0","7.7","144.6","PN16/230PSI","4.9","150.2","PN10/150PSI",""],["200","8\"","200.0","9.6","180.8","PN16/230PSI","6.2","187.6","PN10/150PSI",""],["225","9\"","225.0","10.8","203.4","PN16/230PSI","6.9","211.2","PN10/150PSI",""],["250","10\"","250.0","11.9","226.2","PN16/230PSI","7.7","234.6","PN10/150PSI",""]]},"chem":{"headers":["化學品","濃度/狀態","PVC","CPVC","PP","HDPE","304不鏽鋼","316不鏽鋼","備註"],"rows":[["鹽酸HCl","稀釋<20%","A","A","A","A","D","D","316對氯離子敏感"],["鹽酸HCl","濃37%","A","A","A","A","D","D",""],["硫酸H2SO4","稀釋<50%","A","A","A","A","C","C",""],["硫酸H2SO4","濃>70%","B","A","A","A","D","C","濃硫酸是強氧化劑"],["硝酸HNO3","稀釋","B","A","A","A","D","C",""],["氫氧化鈉NaOH","<50%","A","A","A","A","A","A",""],["氨水","<30%","A","A","A","A","A","A",""],["次氯酸鈉漂白水","12.5%","A","A","A","B","D","D","316會被氯離子腐蝕"],["氯化鐵FeCl3","水溶液","A","A","A","A","D","D",""],["過氧化氫H2O2","35%","B","A","B","B","B","B",""],["檸檬酸","水溶液","A","A","A","A","B","A",""],["明礬Al2(SO4)3","水溶液","A","A","A","A","C","A",""],["亞硫酸氫鈉","水溶液","A","A","A","A","C","A",""],["酒精乙醇","水溶液","A","A","A","A","A","A",""],["丙酮","常溫","B","A","A","A","D","B","316對酮類尚可但PVC會膨潤"],["甲苯","常溫","D","B","A","A","D","A",""],["汽油","常溫","D","B","B","A","D","A",""],["柴油","常溫","D","B","B","A","B","A",""],["潤滑油","常溫","D","B","B","A","A","A",""],["鹽水NaCl","水溶液","A","A","A","A","D","D","氯離子腐蝕304"],["醋酸","稀釋","A","A","A","A","B","A",""],["甲醛","水溶液","A","A","A","A","B","A",""]]},"thread":{"headers":["牙規格系統","牙規格名稱","類型","外徑OD(mm)","每吋牙數TPI/牙距","基準內徑(mm)","適用場合","備註"],"rows":[["公制牙","M5×0.8","micro","5.0","0.8mm","4.2","氣動mini接頭/儀表","Festo/QSM最小牙"],["公制牙","M6×1.0","micro","6.0","1.0mm","4.9","氣動mini接頭",""],["公制牙","M8×1.0","mini","8.0","1.0mm","6.9","氣動接頭",""],["公制牙","M10×1.0","mini","10.0","1.0mm","8.9","氣動/儀表",""],["公制牙","M12×1.5","公制","12.0","1.5mm","10.4","一般機械接頭",""],["公制牙","M16×1.5","公制","16.0","1.5mm","14.4","一般機械接頭",""],["公制牙","M20×1.5","公制","20.0","1.5mm","18.4","一般機械接頭",""],["英制UNF","10-32UNF","micro","4.83","32TPI","3.6","儀表/壓力開關/點火線圈","美國mini儀表牙"],["英制UNF","7/16-20UNF","mini","11.11","20TPI","9.0","SAE/JIC儀表接頭",""],["英制UNF","1/4-28UNF","mini","6.35","28TPI","5.0","儀表接頭",""],["NPT錐牙","1/8\"-27 NPT","錐形","10.30","27TPI","8.75","儀表/壓力計/小型閥門","最常見mini管牙"],["NPT錐牙","1/4\"-18 NPT","錐形","13.57","18TPI","11.35","小型閥門/取樣",""],["NPT錐牙","3/8\"-18 NPT","錐形","17.05","18TPI","14.75","一般閥門",""],["NPT錐牙","1/2\"-14 NPT","錐形","21.22","14TPI","18.32","化工閥門(最常用)",""],["NPT錐牙","3/4\"-14 NPT","錐形","26.57","14TPI","23.66","化工閥門",""],["NPT錐牙","1\"-11.5 NPT","錐形","33.25","11.5TPI","29.70","大口徑閥門",""],["NPT錐牙","1-1/4\"-11.5 NPT","錐形","41.98","11.5TPI","38.40","大口徑閥門",""],["NPT錐牙","1-1/2\"-11.5 NPT","錐形","48.05","11.5TPI","44.10","大口徑閥門",""],["NPT錐牙","2\"-11.5 NPT","錐形","60.09","11.5TPI","56.00","大口徑閥門",""],["PT/BSPP平行牙","PT1/8 (G1/8)","平行","9.73","28TPI","8.57","日廠/儀表","日本JIS B 0202"],["PT/BSPP平行牙","PT1/4 (G1/4)","平行","13.16","19TPI","11.44","日廠閥門",""],["PT/BSPP平行牙","PT3/8 (G3/8)","平行","16.66","19TPI","14.95","日廠閥門",""],["PT/BSPP平行牙","PT1/2 (G1/2)","平行","20.96","14TPI","18.63","日廠化工閥門",""],["PT/BSPP平行牙","PT3/4 (G3/4)","平行","26.44","14TPI","24.12","日廠化工閥門",""],["PT/BSPP平行牙","PT1 (G1)","平行","33.25","11TPI","30.30","日廠大口徑閥門",""],["BSPT錐牙","R1/8 (PT錐)","錐形","9.73","28TPI","8.57","英製錐管牙","跟PT平行牙外徑相同但錐度"],["BSPT錐牙","R1/4","錐形","13.16","19TPI","11.44","英製錐管牙",""],["BSPT錐牙","R3/8","錐形","16.66","19TPI","14.95","英製錐管牙",""],["BSPT錐牙","R1/2","錐形","20.96","14TPI","18.63","英製錐管牙",""]]},"pfa":{"headers":["規格","外徑OD(mm)","內徑ID(mm)","壁厚(mm)","備註"],"rows":[["1/8\"","3.18","2.18","0.5","毛細管/小流量"],["1/4\"","6.35","3.95","1.2","半導體最常用"],["3/8\"","9.53","6.35","1.6",""],["1/2\"","12.70","9.53","1.6",""],["3/4\"","19.05","15.80","1.6",""],["1\"","25.40","22.20","1.6",""],["1-1/4\"","31.80","28.00","1.9",""],["1-1/2\"","38.10","33.70","2.2",""],["公制6mm","6.0","4.0","1.0",""],["公制8mm","8.0","6.0","1.0",""],["公制10mm","10.0","8.0","1.0",""],["公制12mm","12.0","10.0","1.0",""],["公制19mm","19.0","15.8","1.6",""],["公制25mm","25.0","22.0","1.5",""]]},"jis10k":{"headers":["口徑","鋼管外徑(mm)","法蘭外徑D(mm)","厚度t(mm)","RF高度f","RF直徑g","PCD C(mm)","螺栓孔數n","螺栓孔徑h(mm)","螺栓尺寸"],"rows":[["10A","17.3","90","12","1","46","65","4","15","M12"],["15A","21.7","95","12","1","51","70","4","15","M12"],["20A","27.2","100","14","1","56","75","4","15","M12"],["25A","34.0","125","14","1","67","90","4","19","M16"],["32A","42.7","135","16","2","76","100","4","19","M16"],["40A","48.6","140","16","2","81","105","4","19","M16"],["50A","60.5","155","16","2","96","120","4","19","M16"],["65A","76.3","175","18","2","116","140","4","19","M16"],["80A","89.1","185","18","2","126","150","8","19","M16"],["90A","101.6","195","18","2","136","160","8","19","M16"],["100A","114.3","210","18","2","151","175","8","19","M16"],["125A","139.8","250","20","2","182","210","8","23","M20"],["150A","165.2","280","22","2","212","240","8","23","M20"],["175A","190.7","305","22","2","237","265","12","23","M20"],["200A","216.3","330","22","2","262","290","12","23","M20"],["225A","241.8","350","22","2","282","310","12","23","M20"],["250A","267.4","400","24","2","324","355","12","25","M22"],["300A","318.5","445","24","3","368","400","16","25","M22"],["350A","355.6","490","26","3","413","445","16","25","M22"],["400A","406.4","560","28","3","475","510","16","27","M24"],["450A","457.2","620","30","3","530","565","20","27","M24"],["500A","508.0","675","30","3","585","620","20","27","M24"],["600A","609.6","795","32","3","690","730","24","33","M30"],["700A","711.2","905","34","3","800","840","24","33","M30"],["800A","812.8","1020","36","3","905","950","28","33","M30"],["900A","914.4","1120","38","3","1005","1050","28","33","M30"],["1000A","1016.0","1235","40","3","1110","1160","28","39","M36"]]},"fittings":{"headers":["管件類型","英文名稱/縮寫","接頭方式","適用材質","口徑範圍","備註"],"rows":[["直接頭/套管","Coupling (CP)","承插溶接/熱熔","PVC/CPVC/PP/PVDF/PE","1/2\"~24\"(PVC);DN20~315(PP/PVDF)","同口徑直線連接"],["90度彎頭","90° Elbow (90L)","承插溶接/熱熔","PVC/CPVC/PP/PVDF/PE","同上","轉90度"],["45度彎頭","45° Elbow (45L)","承插溶接/熱熔","PVC/CPVC/PP/PVDF/PE","同上","轉45度用於緩變向"],["同心大小頭","Concentric Reducer (R)","承插溶接/熱熔/法蘭","PVC/CPVC/PP/PVDF/PE","1/2\"×3/4\"~24\"×20\"","同心縮徑，垂直管路用"],["偏心大小頭","Eccentric Reducer (RE)","承插溶接/熱熔","PVC/PP/PVDF","2\"×1-1/2\"~12\"×10\"","偏心縮徑，水平管路防積氣"],["等徑三通","Equal Tee (T)","承插溶接/熱熔","PVC/CPVC/PP/PVDF/PE","1/2\"~24\"(PVC);DN20~315","三端同口徑分流"],["異徑三通","Reducing Tee (TR)","承插溶接/熱熔","PVC/CPVC/PP/PVDF","2\"×1\"~12\"×6\"","直通大、分支小"],["管帽","End Cap (EC)","承插溶接/熱熔","PVC/CPVC/PP/PVDF/PE","1/2\"~24\"(PVC);DN20~315","管路末端封閉"],["卜申/補芯","Bushing (BU)","承插溶接/牙接","PVC/CPVC","1\"×1/2\"~4\"×2\"","大轉小內嵌接頭，縮短空間"],["外牙接頭","Male Adapter (MTA)","承插溶接+NPT牙","PVC/CPVC/PP/PVDF","1/2\"~4\"(PVC);DN20~63","接閥門/設備外牙"],["內牙接頭","Female Adapter (FTA)","承插溶接+NPT牙","PVC/CPVC/PP/PVDF","1/2\"~4\"(PVC);DN20~63","接閥門/設備內牙"],["牙接頭三通","Threaded Tee (TT)","兩端承插+中間牙","PVC/CPVC","1/2\"~2\"","接壓力計/取樣口"],["活接頭","Union (UN)","承插溶接+牙鎖","PVC/CPVC/PP/PVDF","1/2\"~4\"(PVC);DN20~63","便於拆裝閥門"],["法蘭接頭","Flange Adaptor/Stub End","法蘭面","PVC/CPVC/PP/PVDF/PE","1\"~24\"(PVC);DN20~630","接法蘭法蘭連接"],["法蘭盲板","Blind Flange","法蘭面","PVC/CPVC/PP/PVDF","1\"~24\"","封閉法蘭末端"],["由令接頭","Union Joint","承插溶接","PVC/PP","1/2\"~4\"","南亞常用術語"],["過渡接頭","Transition Fitting","溶接+牙/法蘭","PVC↔PP;PVC↔金屬","1/2\"~4\"","不同材質間過渡"],["波紋管/軟管接頭","Hose Barb","承插溶接+插尾","PVC/PP/PVDF/PFA","1/4\"~2\"","接PE/PU/PFA軟管"]]},"hdpe":{"headers":["公稱口徑DN(mm)","外徑OD(mm)","SDR17壁厚(mm)","SDR17內徑ID(mm)","SDR11壁厚(mm)","SDR11內徑ID(mm)","對應英制約"],"rows":[["20","20","1.2","17.6","1.9","16.2","1/2吋"],["25","25","1.5","22.0","2.3","20.4","3/4吋"],["32","32","1.9","28.2","3.0","26.0","1吋"],["40","40","2.4","35.2","3.7","32.6","1-1/4吋"],["50","50","3.0","44.0","4.6","40.8","1-1/2吋"],["63","63","3.8","55.4","5.8","51.4","2吋"],["75","75","4.5","66.0","6.8","61.4","2-1/2吋"],["90","90","5.3","79.4","8.2","73.6","3吋"],["110","110","6.6","96.8","10.0","90.0","4吋"],["125","125","7.4","110.2","11.4","102.2","5吋"],["140","140","8.3","123.4","12.7","114.6",""],["160","160","9.5","141.0","14.6","130.8","6吋"],["180","180","10.7","158.6","16.4","147.2",""],["200","200","11.9","176.2","18.2","163.6","8吋"],["225","225","13.4","198.2","20.5","184.0",""],["250","250","14.8","220.4","22.7","204.6","10吋"],["280","280","16.6","246.8","25.5","229.0",""],["315","315","18.7","277.6","28.6","257.8","12吋"],["355","355","21.0","313.0","32.3","290.4","14吋"],["400","400","23.7","352.6","36.4","327.2","16吋"],["450","450","26.7","396.6","40.9","368.2","18吋"],["500","500","29.7","440.6","45.5","409.0","20吋"],["560","560","33.1","493.8","50.9","458.2",""],["630","630","37.1","555.8","57.2","515.6","24吋"]]},"nominal":{"headers":["JIS口徑(A)","公稱DN","英制NPS","鋼管外徑(mm)","台灣俗稱","備註"],"rows":[["10A","DN10","3/8\"","17.3","3分",""],["15A","DN15","1/2\"","21.7","4分",""],["20A","DN20","3/4\"","27.2","6分",""],["25A","DN25","1\"","34.0","1吋",""],["32A","DN32","1-1/4\"","42.7","1吋2",""],["40A","DN40","1-1/2\"","48.6","1吋半",""],["50A","DN50","2\"","60.5","2吋",""],["65A","DN65","2-1/2\"","76.3","2吋半",""],["80A","DN80","3\"","89.1","3吋",""],["90A","DN90","3-1/2\"","101.6","3吋半",""],["100A","DN100","4\"","114.3","4吋",""],["125A","DN125","5\"","139.8","5吋",""],["150A","DN150","6\"","165.2","6吋",""],["200A","DN200","8\"","216.3","8吋",""],["250A","DN250","10\"","267.4","10吋",""],["300A","DN300","12\"","318.5","12吋",""]]},"cable":{"headers":["電纜型式","芯數/對數","導體規格","導體構成","導體外徑(mm)","完成外徑(mm)","約計重量(kg/km)","備註"],"rows":[["VVF平型","2C","1.6mm單線","1/1.6","1.6","6.2×9.4(厚×寬)","100","屋內配電最常用"],["VVF平型","2C","2.0mm單線","1/2.0","2.0","6.6×10.5","130",""],["VVF平型","2C","5.5mm²","7/1.0","3.0","—","—",""],["VVF平型","3C","1.6mm單線","1/1.6","1.6","6.2×13.0","140",""],["VVF平型","3C","2.0mm單線","1/2.0","2.0","6.6×14.0","185",""],["VV圓型","2C","1.6mm單線","1/1.6","1.6","10.0","130",""],["VV圓型","2C","2.0mm單線","1/2.0","2.0","10.5","160",""],["VV圓型","2C","5.5mm²","7/1.0","3.0","13.5","260",""],["VV圓型","2C","14mm²","7/1.6","4.8","19.0","555",""],["VV圓型","2C","60mm²","壓縮","9.3","31.0","1700",""],["VV圓型","3C","1.6mm單線","1/1.6","1.6","10.5","155",""],["VV圓型","3C","2.0mm單線","1/2.0","2.0","11.5","200",""],["VV圓型","3C","5.5mm²","7/1.0","3.0","14.5","335",""],["VV圓型","3C","14mm²","7/1.6","4.8","20.0","740",""],["VV圓型","3C","60mm²","壓縮","9.3","33.0","2370",""],["VV圓型","3C","100mm²","壓縮","12.0","40.0","3780",""],["VV圓型","4C","1.6mm單線","1/1.6","1.6","11.5","190",""],["VV圓型","4C","2.0mm單線","1/2.0","2.0","12.5","250",""],["VV圓型","4C","5.5mm²","7/1.0","3.0","16.0","420",""],["VV圓型","4C","14mm²","7/1.6","4.8","22.0","945",""],["VV圓型","4C","60mm²","壓縮","9.3","36.0","3210",""],["VV圓型","4C","100mm²","壓縮","12.0","44.0","4950",""],["儀表電纜","1P","0.5mm²","絞線","—","約7.0","—","1對2條線"],["儀表電纜","1P","0.75mm²","絞線","—","約7.4","—",""],["儀表電纜","1P","1.0mm²","絞線","—","約7.4","—",""],["儀表電纜","1P","1.5mm²","絞線","—","約8.3","—",""],["儀表電纜","2P","0.75mm²","絞線","—","約10.0","—","2對4條線"],["儀表電纜","3P","0.75mm²","絞線","—","約11.0","—","3對6條線"],["儀表電纜","4P","0.75mm²","絞線","—","約12.0","—","4對8條線"],["儀表電纜","6P","0.75mm²","絞線","—","約14.0","—","6對12條線"],["儀表電纜","10P","0.75mm²","絞線","—","約17.0","—","10對20條線"],["網路線","4P","CAT5e","絞線","—","約5.0","—","8條芯"],["網路線","4P","CAT6","絞線","—","約6.0","—","8條芯"]]},"bolt":{"headers":["螺絲規格","粗牙牙距(mm)","扳手尺寸(mm)","自由鑽孔徑(mm)"],"rows":[["M3","0.5","5.5","3.2"],["M4","0.7","7.0","4.2"],["M5","0.8","8.0","5.2"],["M6","1.0","10.0","6.2"],["M7","1.0","11.0","7.2"],["M8","1.25","13.0","8.2"],["M10","1.5","17.0","10.5"],["M12","1.75","19.0","13.0"],["M14","2.0","22.0","15.0"],["M16","2.0","24.0","17.0"],["M20","2.5","30.0","21.0"],["M22","2.5","32.0","23.0"],["M24","3.0","36.0","25.0"],["M27","3.0","41.0","28.0"],["M30","3.5","46.0","31.0"],["M36","4.0","55.0","37.0"]]},"pneumatic":{"headers":["規格(OD×ID)","外徑OD(mm)","內徑ID(mm)","壁厚(mm)","PU耐壓(MPa)","尼龍耐壓(MPa)","常用顏色","備註"],"rows":[["4×2.5","4.0","2.5","0.75","0.8","1.0","黑/藍/透明","小型氣缸/訊號"],["6×4","6.0","4.0","1.0","0.8","1.0","黑/藍/透明","最常用"],["8×5","8.0","5.0","1.25","0.7","1.0","黑/藍/透明","一般氣壓"],["10×6.5","10.0","6.5","1.75","0.6","0.9","黑/藍","大流量"],["12×8","12.0","8.0","2.0","0.6","0.9","黑/藍","大流量"],["16×12","16.0","12.0","2.0","0.5","0.8","黑/藍","主管"]]},"pipe_mat":{"headers":["材質","全稱/英文","耐溫範圍","耐壓等級(20°C)","特性","常見顏色","典型用途","接著方式","備註"],"rows":[["PVC-U/UPVC","硬質聚氯乙烯","0～60°C","PN10~PN16(10~16kg)","質輕、耐酸鹼、電氣絕緣佳、流體阻力小、不含塑化劑、耐候性佳","灰/白/透明","建築給排水、電線保護管、自來水、工業耐酸鹼流體","溶劑膠合(Weld-On/南亞膠)","最常用；超過60°C軟化"],["CPVC","氯化聚氯乙烯","0～93°C","PN10~PN16","PVC氯化改良，耐熱達93°C，耐腐蝕與高溫高壓表現優","深灰/米色","高溫給水管、化工高溫流體、消防灑水管","CPVC專用溶劑膠","不可用PVC膠"],["PE/HDPE","高密度聚乙烯","-40～60°C","PN10(氣體)/PN16(水)","韌性極佳、耐衝擊、耐低溫、可撓、耐化學腐蝕","黑(條紋藍/黃)","埋設管線、自來水幹管、瓦斯管、污泥、PE浪管","熱熔對焊/電熱熔接","黑色加碳黑抗UV"],["PP/PPR","聚丙烯","0～90°C(熱水)","PN10~PN20","成本效益高、耐化學性佳、可耐冷熱水、衛生無毒","灰/綠(PPR)","化工廠流體、冷熱水管、純水設備、廢氣洗滌塔","熱熔承插/對焊","PPR為無規共聚聚丙烯"],["PVDF","聚偏二氟乙烯","-40～140°C","PN16(20-110mm)","高耐溫、高純度、耐幾乎所有化學品、機械強度高","透明/象牙白","半導體高純度、腐蝕性化學品、高溫製程","熱熔對焊/承插","半導體廠首選"],["PFA","可溶性聚四氟乙烯","-200～260°C","低壓(<10kg)","最優耐化學性、耐溫最高、高純度、可撓性軟管","透明","半導體高純化學品輸送、腐蝕性氣體","FIT接頭/熱擴口","半導體級最貴"],["PTFE","聚四氟乙烯","-200～260°C","低壓","幾乎耐所有化學品、耐溫最高、但機械加工困難","白","腐蝕性化學品、密封墊片","機械加工/擴口","不可熱熔焊接"],["PU","聚氨酯軟管","-20～60°C","0.5~0.8 MPa","高柔軟彈性、耐磨損、抗扭曲、耐油、耐低溫","黑/藍/透明","氣壓配管、自動化設備、頻繁彎折移動","快接頭(mini牙)","氣動最常用"],["PA/尼龍","聚酰胺(尼龍)","-40～120°C","0.8~1.5 MPa","剛性高、耐壓優於PU、耐高溫、抗化學腐蝕、耐磨","黑/自然色","固定氣源配管、長距離輸送、汽車機車配線保護(PA浪管)","快接頭/牙接","耐壓比PU高"],["LDPE","低密度聚乙烯","0～40°C","低壓(<0.4MPa)","質輕、成本低、耐化學性、柔軟","半透明/黑","低壓配管、一般低壓流體、氣體輸送","熱熔/接頭","耐壓低，勿用於高壓"]]},"pvc_grade":{"headers":["等級代號","厚度等級","用途分類","厚度特性","典型用途","顏色","備註"],"rows":[["A管","中厚","—","中等厚度","室內配電、一般給水","灰/白","最常用"],["B管","最厚","—","最厚、承壓最高","承壓給水、自來水、工業壓力管路","灰","W管常用B管"],["S管","最薄","—","最薄、無壓","排水、雨水管、無壓流體","灰/白","不可承壓"],["D管","—","排水","依D管標準","建築排水、污水管","灰","無壓重力流"],["E管","—","電線導管","依E管標準","牆內/天花板隱藏配管(暗管)","灰/白","最普遍電管"],["O管","—","工業一般","依O管標準","工廠一般流體輸送","灰","通用型"],["W管","—","自來水","B管厚度","自來水給水、飲用水","灰","有正字標記"]]},"stainless":{"headers":["公稱口徑NPS","公稱DN","外徑OD(mm)","Sch10S壁厚(mm)","Sch10S內徑(mm)","Sch40S壁厚(mm)","Sch40S內徑(mm)","備註"],"rows":[["1/4\"","DN8","13.72","—","—","2.24","9.24","儀表/小口徑"],["3/8\"","DN10","17.15","—","—","2.31","12.53",""],["1/2\"","DN15","21.34","2.11","17.12","2.77","15.80","最常用"],["3/4\"","DN20","26.67","2.11","22.45","2.87","20.93",""],["1\"","DN25","33.40","2.77","27.86","3.38","26.64",""],["1-1/4\"","DN32","42.16","2.77","36.62","3.56","35.04",""],["1-1/2\"","DN40","48.26","2.77","42.72","3.68","40.90",""],["2\"","DN50","60.33","2.77","54.79","3.91","52.51",""],["2-1/2\"","DN65","73.03","3.05","66.93","5.16","62.71",""],["3\"","DN80","88.90","3.05","82.80","5.49","77.92",""],["4\"","DN100","114.30","3.05","108.20","6.02","102.26",""],["5\"","DN125","139.83","3.40","133.03","6.55","126.73",""],["6\"","DN150","168.28","3.40","161.48","7.11","154.06",""],["8\"","DN200","219.08","3.76","211.56","8.18","202.72",""]]},"ppr":{"headers":["外徑OD(mm)","對應英制","PN10壁厚(mm)","PN16壁厚(mm)","PN20壁厚(mm)","PN25壁厚(mm)","備註"],"rows":[["20","1/2\"","2.0","2.3","2.8","3.4","冷熱水最常用"],["25","3/4\"","2.3","2.8","3.5","4.2",""],["32","1\"","2.9","3.6","4.4","5.4",""],["40","1-1/4\"","3.7","4.5","5.5","6.7",""],["50","1-1/2\"","4.6","5.6","6.9","8.3",""],["63","2\"","5.8","7.1","8.6","10.5",""],["75","2-1/2\"","6.8","8.4","10.3","12.5",""],["90","3\"","8.2","10.1","12.3","15.0",""],["110","4\"","10.0","12.3","15.1","18.3",""]]},"copper":{"headers":["公稱口徑","外徑OD(mm)","壁厚(mm)","內徑ID(mm)","用途","備註"],"rows":[["1/4\"","6.35","0.8","4.75","空氣調節/小製程","冷媒管"],["3/8\"","9.52","0.8","7.92","空氣調節/製程","冷媒管"],["1/2\"","12.70","0.9","10.90","空氣調節/瓦斯/製程","最常用"],["5/8\"","15.88","1.0","13.88","空氣調節/製程",""],["3/4\"","19.05","1.0","17.05","空氣調節/給水",""],["7/8\"","22.22","1.14","19.94","空氣調節大管",""],["1-1/8\"","28.58","1.2","26.18","大型空調/製程",""],["1-3/8\"","34.92","1.4","32.12","大型空調",""],["1-5/8\"","41.28","1.5","38.28","大型空調"]]},"metal_grade":{"headers":["材質代號","繁體名稱","英文/別名","類別","耐溫範圍","耐蝕性","常用用途","連接方式","備註"],"rows":[["SGP","配管用炭鋼管","Carbon Steel Pipe / JIS G3452","黑色金屬","-10～350°C","易生鏽，需鍍鋅或烤漆","一般水管、瓦斯管、空調冷媒管、結構用","螺牙/法蘭/焊接","最便宜的鐵管"],["STPG370/410","壓力配管用炭鋼管","Seamless Carbon Steel / JIS G3454","黑色金屬","-10～350°C","易生鏽","高壓蒸氣、壓縮空氣、油品","焊接/法蘭","無縫鋼管"],["SUS304","不鏽鋼304","18Cr-8Ni / AISI 304","有色金屬","-200～425°C","優，怕氯離子","食品、製程、給水、一般化工","焊接/法蘭/牙接","最常用不鏽鋼"],["SUS304L","低碳不鏽鋼304L","AISI 304L (low carbon)","有色金屬","-200～425°C","優，焊接後耐蝕佳","需焊接的製程管、食品設備","焊接","低碳版，焊後不鏽"],["SUS316","不鏽鋼316","16Cr-12Ni-2Mo / AISI 316","有色金屬","-200～450°C","優，加Mo耐蝕更強","化工、海水、漂白水、醫藥","焊接/法蘭","含鉬，比304耐蝕"],["SUS316L","低碳不鏽鋼316L","AISI 316L (low carbon)","有色金屬","-200～450°C","最優，焊接後耐蝕最佳","半導體、化工、海水設備","焊接","半導體等級首選"],["SECC/電鍍鋅","電解鋼板","Electro-galvanized","黑色金屬","-","一般防鏽","電箱、外殼、配電","折彎/螺接","室內用"],["SGCC/熱浸鍍鋅","熱軋鍍鋅鋼管","HDG / Galvanized","黑色金屬","-","鍍鋅防鏽，比黑鋼管耐久","戶外、水線、消防、結構","螺牙/法蘭/焊接","屋外露面用"],["TP-C/紅銅","韌煉銅管","DHP Copper / JIS H3300","有色金屬","-200～150°C","優，耐大氣腐蝕","空調冷媒、給水、瓦斯、製程","釬焊/壓接","冷媒管最常用"],["鋁管","鋁合金管","Aluminum 6063","有色金屬","-","輕，耐大氣但不耐鹼","機械設備、氣體、輕量化","焊接/壓接","少用於化工"]]},"rubber":{"headers":["材質代號","中文名稱","英文","硬度(Shore A)","耐溫範圍","特性","適用介質","不適用","備註"],"rows":[["NBR","丁腈橡膠","Nitrile / Buna-N","70±5","-30～100°C","耐油性最佳、耐磨、便宜","礦物油、汽油、潤滑油、水","臭氧、陽光、酮類","油壓/水管最常用"],["EPDM","三元乙丙橡膠","Ethylene Propylene","70±5","-40～150°C","耐熱、耐紫外線、耐臭氧、耐鹼","热水、蒸汽、氨水、弱酸鹼、煞車油","礦物油、汽油、烴類溶劑","給水/蒸汽首選"],["FKM/Viton","氟素橡膠","Viton / FKM","75±5","-20～200°C","耐高溫、耐油、耐化學、耐臭氧","熱油、燃油、酸鹼、烴類、氯氣","酮類、低壓蒸汽、胺類","化工/高溫首選"],["矽橡膠","矽利康","Silicone / VMQ","50±5","-60～200°C","耐高溫低溫、無毒、食品級","食品、醫療、高溫乾熱、戶外","高壓油、機油、耐磨差","食品/高溫"],["CR","氯丁二烯橡膠","Neoprene / Chloroprene","65±5","-40～100°C","耐候、耐臭氧、耐油尚可","戶外、冷媒、弱點酸鹼","強酸、強溶劑","戶外/空調"],["IIR","丁基橡膠","Butyl","60±5","-40～120°C","氣密性最佳、耐酸鹼","真空、緩衝、內胎、酸鹼設備","石油系油類","氣密用途"],["NR","天然橡膠","Natural Rubber","60±5","-50～80°C","彈性最佳、耐磨、便宜","緩衝、減震、食品(純)","油、臭氧、陽光、熱","減震墊"],["PU","聚氨酯橡膠","Polyurethane / PU","90±5","-30～80°C","耐磨最優、抗拉、耐油","高磨耗、油封、墊片、氣管","高溫、熱水、酮類","耐磨件"]]},"conduit":{"headers":["導管類型","公稱口徑","外徑OD(mm)","內徑ID(mm)","材質特性","適用場景","備註"],"rows":[["PVC硬質電管(E管)","1/2\"","21.6","17.8","價廉/絕緣/耐燃","暗管/牆內/地坪","最普遍"],["PVC硬質電管(E管)","3/4\"","27.0","22.2","價廉/絕緣/耐燃","暗管/牆內/地坪",""],["PVC硬質電管(E管)","1\"","34.0","28.0","價廉/絕緣/耐燃","暗管/牆內/地坪",""],["PVC硬質電管(E管)","1-1/4\"","42.0","36.0","價廉/絕緣/耐燃","暗管/大樓配線",""],["PVC硬質電管(E管)","1-1/2\"","48.0","41.0","價廉/絕緣/耐燃","暗管/大樓配線",""],["PVC硬質電管(E管)","2\"","60.0","52.0","價廉/絕緣/耐燃","暗管/主幹",""],["CD可撓波紋管","1/2\"","24.0","19.0","可彎曲/繞樑","天花板夾層/繞障礙","橘色/灰色"],["CD可撓波紋管","3/4\"","30.0","25.0","可彎曲/繞樑","天花板夾層/繞障礙","防火較硬管差"],["CD可撓波紋管","1\"","38.0","32.0","可彎曲/繞樑","天花板夾層",""],["鍍鋅鋼管 EMT","1/2\"","21.3","15.9","堅固/阻燃/耐撞","明管/工廠/車庫","薄壁"],["鍍鋅鋼管 EMT","3/4\"","26.7","21.6","堅固/阻燃/耐撞","明管/工廠/車庫","薄壁"],["鍍鋅鋼管 EMT","1\"","33.4","27.8","堅固/阻燃/耐撞","明管/工廠/車庫","薄壁"],["鍍鋅鋼管 RMC","1/2\"","21.3","15.4","厚壁/最堅固","化工區/戶外/腐蝕環境","厚壁"],["鍍鋅鋼管 RMC","3/4\"","26.7","20.9","厚壁/最堅固","化工區/戶外/腐蝕環境","厚壁"],["浪管(塑膠)","1/2\"","20.0","15.0","柔軟/低成本","局部保護/短期修飾","勿埋牆內"],["浪管(塑膠)","3/4\"","25.0","20.0","柔軟/低成本","局部保護/短期修飾","勿埋地坪下"]]},"wirecolor":{"headers":["電路類型","線別","CNS標準顏色","舊式/其他","備註"],"rows":[["三相三線/四線","L1/A相","紅","紅","最常見"],["三相三線/四線","L2/B相","白","白",""],["三相三線/四線","L3/C相","藍","藍",""],["三相三線/四線","N中性","黑","黑",""],["三相三線/四線","PE接地","綠/綠黃雙色","綠/裸銅","強制不可省略"],["單相110V","火線L","黑(或紅)","黑/紅","插座上孔"],["單相110V","中性N","白(或淺藍)","白",""],["單相110V","接地PE","綠黃雙色","綠/裸銅",""],["單相220V","L1","紅","紅","冷氣/電熱器"],["單相220V","L2","黑","黑",""],["單相220V","接地PE","綠黃雙色","綠",""],["直流","正(+)","紅","紅",""],["直流","負(-)","黑","黑",""],["儀表","訊號正","白","白",""],["儀表","訊號負","黑","黑",""],["儀表","隔離/屏蔽","裸銅編織","—","單端接地"]]},"angle":{"headers":["類型","規格代號","斷面尺寸(mm)","厚度(mm)","每公尺重量(kg)","常用用途","備註"],"rows":[["等邊角鋼","L30×30","30×30","3","1.36","小支架/管路支撐","輕量"],["等邊角鋼","L40×40","40×40","3","1.84","管架/電管支架","最常用"],["等邊角鋼","L40×40","40×40","5","2.74","支架/底座",""],["等邊角鋼","L50×50","50×50","4","3.05","管路支架/門窗",""],["等邊角鋼","L50×50","50×50","6","4.44","承重支架",""],["等邊角鋼","L65×65","65×65","5","4.72","大管架/設備底座",""],["等邊角鋼","L65×65","65×65","6","5.65","設備底座",""],["等邊角鋼","L75×75","75×75","6","6.90","結構/大支架",""],["等邊角鋼","L75×75","75×75","9","10.0","承重結構",""],["等邊角鋼","L90×90","90×90","9","10.9","大結構",""],["槽鋼","[5","50×37","4.5","5.44","輕型支架",""],["槽鋼","[6.5","65×40","4.8","6.70","電管/輕管架",""],["槽鋼","[8","80×43","5.0","8.04","管架/設備底座","常用"],["槽鋼","[10","100×48","5.3","10.0","結構/大底座",""],["槽鋼","[12","120×53","5.5","12.1","結構樑",""],["H型鋼","H100×50","100×50","5×7","9.54","小樑/機台",""],["H型鋼","H150×75","150×75","5×7","14.0","設備底座",""],["H型鋼","H200×100","200×100","5.5×8","21.7","樑/大型支架",""],["H型鋼","H250×125","250×125","6×9","29.7","主結構",""]]},"plate":{"headers":["公稱厚度(mm)","實際厚度(mm)","常用用途","每平方公尺重量(kg)","備註"],"rows":[["1.6","1.5~1.8","電箱外殼/薄鐵","12.6","薄"],["2.0","1.9~2.2","電箱/支架","15.7",""],["2.3","2.2~2.5","輕型底座","18.1",""],["3.2","3.0~3.4","墊片/輕底座","25.1",""],["4.5","4.3~4.8","法蘭墊/底座","35.3",""],["6.0","5.7~6.3","設備底座","47.1","常用"],["9.0","8.5~9.5","重底座/結構","70.7",""],["12.0","11.5~12.5","結構/重底座","94.2",""],["16.0","15.5~16.5","重型結構","125.6",""],["19.0","18.5~19.5","機台底座","149.0",""],["22.0","21.5~22.5","重型機台","172.7",""],["25.0","24.5~25.5","基座/錨定","196.3",""]]},"oring":{"headers":["線徑(mm)","公稱ID範圍(mm)","常用尺寸(mm)","硬度","常用材質","備註"],"rows":[["1.0","1.5～10","2/3/4/5/6/7/8/9/10","70±5","NBR/矽膠","儀表/小閥"],["1.5","3～15","3/4/5/6/7/8/10/12/14/15","70±5","NBR/EPDM","小口徑"],["1.8","5～30","5/6/7/8/9/10/12/14/16/18/20/22/24/26/28/30","70±5","NBR","ISO3601最常用"],["2.4","10～40","10/12/14/16/18/20/22/24/26/28/30/32/35/38/40","70±5","NBR/EPDM",""],["3.5","16～60","16/18/20/22/24/26/28/30/32/35/38/40/45/50/55/60","70±5","NBR/Viton","法蘭/閥門常用"],["5.3","30～150","30/35/40/45/50/55/60/65/70/75/80/85/90/100/110/120/130/140/150","70±5","NBR/EPDM/Viton","大法蘭/大閥"],["7.0","60～200","60/70/80/90/100/110/125/140/160/180/200","75±5","NBR/EPDM","大口徑法蘭"]]},"concrete":{"headers":["f'c (kgf/cm²)","對應CNS標號","水灰比W/C(%)","每米水泥袋數","用途","備註"],"rows":[["140","C14","0.70~0.75","5~6","地坪、枕木、輕版、道路基層","低強度"],["175","C17.5","0.60~0.65","6~7","擋土牆、基礎、地坪承重","一般"],["210","C21","0.55~0.60","7~8","一般房屋結構、2~3樓、樓版","最常用"],["245","C24.5","0.50~0.55","8~9","3~5樓、工廠樓版、樑柱",""],["280","C28","0.45~0.50","9~10","高樓、工廠主結構、機台基礎",""],["350","C35","0.40~0.45","10~12","預力樑、高樓、耐震結構","高強度"]]},"rebar":{"headers":["鋼筋稱號","公稱直徑(mm)","斷面積(cm²)","每公尺重量(kg)","俗稱","常用用途","備註"],"rows":[["#3","9.53","0.71","0.56","3分鐵","箍筋、版筋","最細"],["#4","12.7","1.27","0.99","4分鐵","版筋、小樑","最常用"],["#5","15.9","1.98","1.55","5分鐵","樑柱、基礎",""],["#6","19.1","2.85","2.24","6分鐵","樑柱、柱",""],["#7","22.2","3.88","3.04","7分鐵","大樑、柱",""],["#8","25.4","5.07","3.97","8分鐵","柱、基礎",""],["#9","28.7","6.47","5.06","9分鐵","大樑、主結構",""],["#10","32.3","8.21","6.55","10分鐵","高樓主結構",""]]},"mortar":{"headers":["配比(水泥:砂)","水泥用量(包/m³)","用途","強度等級","備註"],"rows":[["1:1","18~20","高強度修補、磁磚黏著","高","最硬"],["1:2","14~15","磁磚黏著、耐酸磚","高","貼磚"],["1:3","11~12","粉刷、打底","中高","最常用"],["1:4","9~10","磚砌、一般粉刷","中","砌磚"],["1:5","7~8","打底、找坡","中低",""],["1:6","6~7","找坡、薄層","低",""]]},"slope":{"headers":["管類/區域","最小坡度","備註","施工注意"],"rows":[["污水管(重力流)","1/50 (2%)","公共污水管","不可小於1/100"],["污水支管","1/50~1/100","家用廢水",""],["雨水管","1/100 (1%)","雨水下水道",""],["雨水側溝","1/100~1/200","道路側溝",""],["給水管(壓送)","無坡度要求","壓力管","起伏均可"],["地坪排水","1/100~1/50 (1~2%)","戶外地坪","向排水口傾斜"],["屋頂排水","1/100","平屋頂","向落水頭"],["管路埋設深度","管頂覆土≥0.6m","戶外車道下≥1.2m","避免重壓破壞"]]},"torque":{"headers":["螺栓規格","8.8級碳鋼扭力(Nm)","8.8級(kgf-m)","A2-70不鏽鋼扭力(Nm)","A2-70(kgf-m)","扳手尺寸(mm)","備註"],"rows":[["M6","9","0.9","7","0.7","10","小法蘭"],["M8","22","2.2","17","1.7","13",""],["M10","45","4.6","35","3.6","17",""],["M12","78","8.0","60","6.1","19",""],["M14","128","13.1","95","9.7","22",""],["M16","197","20.1","123","12.5","24","法蘭最常用"],["M20","386","39.4","240","24.5","30",""],["M22","510","52.0","320","32.6","32",""],["M24","660","67.3","410","41.8","36",""],["M27","950","96.9","590","60.2","41",""],["M30","1300","132.6","800","81.6","46",""],["M36","2250","229.5","1400","142.8","55","大口徑法蘭"]]}};
+
+// ===== 渲染邏輯 =====
+const CAT_ORDER = ["cat_flange","cat_pipe","cat_fitting","cat_fastener","cat_material","cat_valve","cat_electrical","cat_steel","cat_concrete"];
+let currentCat = null;
+let currentPage = null;
+let currentLang = "zh-Hant";
+let expanded = new Set();
+
+function t(key){ return I18N[currentLang][key] || I18N["zh-Hant"][key] || key; }
+function th(header){ return HEADER_I18N[currentLang]?.[header] || header; }
+function itemName(cat){
+  if(currentLang==="zh-Hant") return cat.name;
+  return ITEM_I18N[cat.id]?.[currentLang] || cat.name;
+}
+
+function getItems(catId){ return CATEGORIES.filter(c=>c.cat===catId); }
+
+function renderNav(){
+  const nav = document.getElementById("nav");
+  let html = "";
+  CAT_ORDER.forEach(c=>{
+    const open = expanded.has(c);
+    html += `<div class="cat-group ${open?'open':''}">`;
+    html += `<button class="cat-toggle" data-cat="${c}"><span class="arrow">▶</span>${t(c)}</button>`;
+    if(open){
+      html += '<div class="cat-children">';
+      getItems(c).forEach(item=>{
+        html += `<button class="cat-item ${item.id===currentPage?'active':''}" data-id="${item.id}">${itemName(item)}</button>`;
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  nav.innerHTML = html;
+
+  nav.querySelectorAll(".cat-toggle").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const c = b.dataset.cat;
+      if(expanded.has(c)) expanded.delete(c); else expanded.add(c);
+      renderNav();
+    });
+  });
+  nav.querySelectorAll(".cat-item").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      currentPage = b.dataset.id;
+      currentCat = CATEGORIES.find(c=>c.id===currentPage).cat;
+      renderNav();
+      renderPage();
+    });
+  });
+}
+
+function renderTable(headers, rows){
+  let html = "<table><thead><tr>";
+  headers.forEach(h=>html += `<th>${th(h)}</th>`);
+  html += "</tr></thead><tbody>";
+  rows.forEach(r=>{
+    html += "<tr>";
+    r.forEach(cell=>{
+      const num = !isNaN(parseFloat(cell)) && isFinite(cell);
+      html += `<td class="${num?'num':''}">${cell}</td>`;
+    });
+    html += "</tr>";
+  });
+  html += "</tbody></table>";
+  return html;
+}
+
+function cardHtml(item){
+  const d = DATA[item.id];
+  const rows = d && d.rows ? d.rows.length : 0;
+  const icon = itemName(item).charAt(0);
+  return `<div class="card" data-id="${item.id}">
+    <div class="icon">${icon}</div>
+    <div class="name">${itemName(item)}</div>
+    <div class="cdesc">${item.desc}</div>
+    <div class="count">${rows} 筆資料</div>
+  </div>`;
+}
+
+function renderHome(){
+  const titleEl = document.getElementById("page-title");
+  const descEl = document.getElementById("page-desc");
+  const countEl = document.getElementById("result-count");
+  const area = document.getElementById("table-area");
+  titleEl.textContent = t("browse_all");
+  descEl.textContent = t("browse_all_desc");
+  countEl.textContent = CATEGORIES.length + (currentLang==="zh-Hant"||currentLang==="zh-Hans" ? " 個資料表" : " tables");
+  let html = '<div class="card-grid">';
+  CATEGORIES.forEach(item=>{ html += cardHtml(item); });
+  html += "</div>";
+  area.innerHTML = html;
+  area.querySelectorAll(".card").forEach(c=>{
+    c.addEventListener("click",()=>{
+      currentPage = c.dataset.id;
+      currentCat = CATEGORIES.find(x=>x.id===currentPage).cat;
+      expanded.add(currentCat);
+      renderNav(); renderPage();
+    });
+  });
+}
+
+function renderPage(){
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  const titleEl = document.getElementById("page-title");
+  const descEl = document.getElementById("page-desc");
+  const countEl = document.getElementById("result-count");
+  const area = document.getElementById("table-area");
+  document.getElementById("note").textContent = t("note_disclaimer");
+
+  if(q){
+    titleEl.textContent = t("search_results");
+    descEl.textContent = q;
+    // 先列出命中的表卡片，點進去看細節
+    const hits = [];
+    CATEGORIES.forEach(cat=>{
+      const d = DATA[cat.id];
+      if(!d || !d.headers) return;
+      const matched = d.rows.filter(r => r.join(" ").toLowerCase().includes(q));
+      if(matched.length > 0) hits.push({cat, matched});
+    });
+    let total = hits.reduce((s,h)=>s+h.matched.length,0);
+    countEl.textContent = total + (currentLang==="zh-Hant"||currentLang==="zh-Hans" ? " 筆" : " results");
+    if(hits.length===0){
+      area.innerHTML = '<p style="color:#999;padding:20px">—</p>';
+      return;
+    }
+    let html = '<div class="card-grid">';
+    hits.forEach(h=>{
+      const d = DATA[h.cat.id];
+      const icon = itemName(h.cat).charAt(0);
+      html += `<div class="card" data-id="${h.cat.id}">
+        <div class="icon">${icon}</div>
+        <div class="name">${itemName(h.cat)}</div>
+        <div class="cdesc">${h.matched.length} 筆命中</div>
+        <div class="count">${d.rows.length} 筆總資料</div>
+      </div>`;
+    });
+    html += "</div>";
+    area.innerHTML = html;
+    area.querySelectorAll(".card").forEach(c=>{
+      c.addEventListener("click",()=>{
+        currentPage = c.dataset.id;
+        currentCat = CATEGORIES.find(x=>x.id===currentPage).cat;
+        expanded.add(currentCat);
+        document.getElementById("search").value = "";
+        renderNav(); renderPage();
+      });
+    });
+    return;
+  }
+
+  if(!currentPage){
+    renderHome();
+    return;
+  }
+
+  const cat = CATEGORIES.find(c=>c.id===currentPage);
+  const d = DATA[currentPage];
+  if(!d || !d.headers){
+    area.innerHTML = "<p style='color:#999;padding:20px'>—</p>";
+    return;
+  }
+  titleEl.textContent = itemName(cat);
+  descEl.textContent = cat.desc;
+  countEl.textContent = d.rows.length + (currentLang==="zh-Hant"||currentLang==="zh-Hans" ? " 筆" : " rows");
+  let back = '<button class="back-link" id="back-btn">← ' + t("back_home") + '</button>';
+  area.innerHTML = back + '<div class="table-wrap">' + renderTable(d.headers, d.rows) + '</div>';
+  document.getElementById("back-btn").addEventListener("click",()=>{
+    currentPage = null; currentCat = null;
+    renderNav(); renderPage();
+  });
+}
+
+document.getElementById("search").addEventListener("input", renderPage);
+document.getElementById("search-btn").addEventListener("click", renderPage);
+document.getElementById("search").addEventListener("keydown",(e)=>{ if(e.key==="Enter") renderPage(); });
+
+document.getElementById("lang-select").addEventListener("change", (e)=>{
+  currentLang = e.target.value;
+  document.getElementById("title").textContent = t("title");
+  document.getElementById("search").placeholder = t("search");
+  renderNav();
+  renderPage();
+});
+
+renderNav();
+renderPage();
+</script>
+</body>
+</html>
